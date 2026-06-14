@@ -153,6 +153,9 @@
   .gchip.ro.tap:active{transform:scale(.94);}
   .gchip.neutral{--gc:#6b7195;}
   .gchip.dimmed{opacity:.28!important;}
+  .group-header{padding:18px 2px 8px; display:flex; align-items:center;}
+  .group-header:first-child{padding-top:4px;}
+  .fam-card.minha,.fam.minha{border-color:var(--gold); border-width:1.5px;}
   .swatches{display:flex; gap:9px; flex-wrap:wrap;}
   .swatch{width:36px; height:36px; border-radius:10px; border:2px solid transparent;}
   .swatch.on{border-color:#fff;}
@@ -303,20 +306,23 @@ function sortedMembros(membros){
   });
 }
 function sortedFamilias(){
-  const famGid=(appData.grupos.find(g=>g.nome==='Família')||{}).id;
-  return [...appData.familias].sort((a,b)=>{
-    const ga=a.grupos||[],gb=b.grupos||[];
-    const ao=famGid&&ga.length&&ga.every(id=>id===famGid);
-    const bo=famGid&&gb.length&&gb.every(id=>id===famGid);
-    if(ao!==bo) return ao?1:-1;
-    return a.nome.localeCompare(b.nome,'pt');
-  });
+  return [...appData.familias].sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
 }
 function familiasDoEvento(ev){
   const g=ev.grupos||[];
   const base=sortedFamilias();
-  if(!g.length) return base;
-  return base.filter(f=>(f.grupos||[]).some(id=>g.includes(id)));
+  let result;
+  if(!g.length){
+    result=base;
+  } else {
+    result=base.filter(f=>(f.grupos||[]).some(id=>g.includes(id)));
+    const mfid=appData.minhaFamiliaId;
+    if(mfid&&!result.some(f=>f.id===mfid)){
+      const mf=appData.familias.find(f=>f.id===mfid);
+      if(mf) result=[mf,...result];
+    }
+  }
+  return result;
 }
 function familiasParaDashboard(ev){
   const base=familiasDoEvento(ev);
@@ -446,13 +452,27 @@ function renderEventos(){
   }).join('');
 }
 
+function famCardHTML(f){
+  const isMinha=f.id===appData.minhaFamiliaId;
+  const membros=sortedMembros(f.membros).map(p=>`
+    <span class="mtag ${p.tipo==='crianca'?'kid':''}">${esc(p.nome)}${p.tipo==='crianca'?' <span style="color:var(--faint);font-size:11px">criança</span>':''}
+      <button class="x" onclick="editarMembro(${f.id},${p.id})" title="Editar">✎</button>
+      <button class="x" onclick="removerMembro(${f.id},${p.id})" title="Remover">×</button></span>`).join('');
+  return `<div class="fam-card${isMinha?' minha':''}">
+    <div class="fam-card-head">
+      <h3>${isMinha?'🏠 ':''}${esc(f.nome)}</h3>
+      <button class="mini-btn" onclick="abrirFamilia(${f.id})" title="Editar">✎</button>
+      <button class="mini-btn" onclick="removerFamilia(${f.id})" title="Apagar">🗑</button>
+    </div>
+    <div class="mlist">${membros}<button class="add-m" onclick="abrirMembro(${f.id})">+ membro</button></div>
+  </div>`;
+}
 function renderPessoas(){
   const gruposBar=`<div class="section-lbl">Grupos</div>
     <div class="gwrap" style="margin-bottom:20px">
       ${appData.grupos.map(g=>`<button type="button" class="gchip ro tap" style="--gc:${g.cor||'#7aa2f7'}" onclick="abrirGrupo(${g.id})">${esc(g.nome)}</button>`).join('')}
       <button type="button" class="add-m" onclick="abrirGrupo()">+ grupo</button>
     </div>`;
-
   if(!appData.familias.length){
     $('#view').innerHTML=gruposBar+`<div class="empty"><div class="big">👪</div>
       <h2>Sem famílias</h2>
@@ -460,26 +480,23 @@ function renderPessoas(){
       <button class="btn" onclick="abrirFamilia()">+ Nova família</button></div>`;
     return;
   }
-  const cards=sortedFamilias().map(f=>{
-    const fg=(f.grupos||[]).map(grupoById).filter(Boolean);
-    const fgLine=fg.length?`<div class="gwrap" style="margin-top:9px">${fg.map(g=>gchipRO(g)).join('')}</div>`:'';
-    const membros=sortedMembros(f.membros).map(p=>`
-      <span class="mtag ${p.tipo==='crianca'?'kid':''}">${esc(p.nome)}${p.tipo==='crianca'?' <span style="color:var(--faint);font-size:11px">criança</span>':''}
-        <button class="x" onclick="editarMembro(${f.id},${p.id})" title="Editar">✎</button>
-        <button class="x" onclick="removerMembro(${f.id},${p.id})" title="Remover">×</button></span>`).join('');
-    return `<div class="fam-card">
-      <div class="fam-card-head">
-        <h3>${esc(f.nome)}</h3>
-        <button class="mini-btn" onclick="abrirFamilia(${f.id})" title="Editar">✎</button>
-        <button class="mini-btn" onclick="removerFamilia(${f.id})" title="Apagar">🗑</button>
-      </div>
-      ${fgLine}
-      <div class="mlist">${membros}<button class="add-m" onclick="abrirMembro(${f.id})">+ membro</button></div>
-    </div>`;
-  }).join('');
-  $('#view').innerHTML=gruposBar+`<div class="section-lbl">${appData.familias.length} família(s)</div>${cards}`;
+  let sections=''; const shown=new Set();
+  for(const g of appData.grupos){
+    const fams=appData.familias
+      .filter(f=>!shown.has(f.id)&&(f.grupos||[]).includes(g.id))
+      .sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+    if(!fams.length) continue;
+    fams.forEach(f=>shown.add(f.id));
+    sections+=`<div class="group-header"><span class="gchip ro" style="--gc:${g.cor||'#7aa2f7'}">${esc(g.nome)}</span></div>`;
+    sections+=fams.map(famCardHTML).join('');
+  }
+  const orphans=appData.familias.filter(f=>!shown.has(f.id)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+  if(orphans.length){
+    sections+=`<div class="section-lbl" style="margin-top:18px">Sem grupo</div>`;
+    sections+=orphans.map(famCardHTML).join('');
+  }
+  $('#view').innerHTML=gruposBar+sections;
 }
-
 function renderFicha(){
   const ev=appData.eventos.find(e=>e.id===currentEventId);
   if(!ev){currentEventId=null; return render();}
@@ -499,6 +516,7 @@ function renderFicha(){
   const sectionLbl=filt.size>0?`Presenças — ${[...filt].map(id=>(grupoById(id)||{}).nome).filter(Boolean).join(', ')}`:'Presenças por família';
   const r=ev.respostas||{};
   const famHtml = fams.length ? fams.map(f=>{
+    const isMinha=f.id===appData.minhaFamiliaId;
     const membros=sortedMembros(f.membros).map(p=>{
       const st=r[p.id]||'pend';
       return `<div class="member">
@@ -510,9 +528,9 @@ function renderFicha(){
         </div>
       </div>`;
     }).join('');
-    return `<div class="fam">
+    return `<div class="fam${isMinha?' minha':''}">
       <div class="fam-head">
-        <div class="fam-name">${esc(f.nome)}</div>
+        <div class="fam-name">${isMinha?'🏠 ':''}${esc(f.nome)}</div>
         <div class="fam-quick">
           <button class="qbtn v" onclick="setFamilia(${f.id},'vem')" title="Todos vêm">✓</button>
           <button class="qbtn n" onclick="setFamilia(${f.id},'nao')" title="Todos não">✗</button>
@@ -776,21 +794,31 @@ function removerMembro(fid,pid){
 
 /* ---- Definições ---- */
 $('#btnSettings').onclick=()=>{
+  const famOpts=appData.familias.map(f=>`<option value="${f.id}" ${appData.minhaFamiliaId===f.id?'selected':''}>${esc(f.nome)}</option>`).join('');
   openSheet(`<h2>Definições</h2>
     <div class="field"><label>Token GitHub (escrita no AppDataJSON)</label>
       <input id="tkInput" type="password" placeholder="github_pat_…" value="${esc(TOKEN)}"></div>
     <p class="hint">Token fine-grained com <b>Contents: write</b> no repo <b>AppDataJSON</b>. Pode ser o mesmo das outras apps. Fica só neste dispositivo (localStorage), nunca nos dados. Sem token = modo leitura.</p>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+    <div class="field"><label>Minha família (sempre incluída em todos os eventos 🏠)</label>
+      <select id="minhaFamSel"><option value="">— nenhuma —</option>${famOpts}</select></div>
+    <p class="hint">Aparece em todos os eventos, mesmo que o grupo não seja convidado.</p>
     <div class="sheet-actions">
-      <button class="btn ghost" onclick="limparToken()">Remover</button>
-      <button class="btn" onclick="guardarToken()">Guardar</button>
+      <button class="btn ghost" onclick="limparToken()">Remover token</button>
+      <button class="btn" onclick="guardarSettings()">Guardar</button>
     </div>
     <p class="hint" style="margin-top:16px">Dados: <b>${OWNER}/${DATA_REPO}/${PATH}</b></p>`);
 };
-function guardarToken(){
+function guardarSettings(){
   const v=$('#tkInput').value.trim();
   TOKEN=v; v?localStorage.setItem(TOKEN_KEY,v):localStorage.removeItem(TOKEN_KEY);
-  closeSheet(); render(); toast(v?'Token guardado':'Token removido'); carregar(true);
+  const mfv=$('#minhaFamSel').value;
+  const mfid=mfv?Number(mfv):null;
+  if(mfid!==appData.minhaFamiliaId){ appData.minhaFamiliaId=mfid; scheduleSave('Minha família actualizada'); }
+  closeSheet(); render(); toast('Definições guardadas');
+  if(v) carregar(true);
 }
+function guardarToken(){guardarSettings();}
 function limparToken(){TOKEN=''; localStorage.removeItem(TOKEN_KEY); closeSheet(); render(); toast('Token removido');}
 
 /* ---------- arranque ---------- */
