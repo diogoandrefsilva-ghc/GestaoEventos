@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#15161f">
+<meta name="theme-color" content="#f5f2ea">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,12 +17,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root{
-    --bg:#15161f; --surface:#1e2030; --surface2:#262a3f; --border:#323650;
-    --text:#e9eaf3; --dim:#9aa0bd; --faint:#6b7195;
-    --gold:#e6b455; --gold-soft:#3a3320;
-    --vem:#5fd08a; --vem-soft:#1d3a2a;
-    --nao:#f0746a; --nao-soft:#3a2220;
-    --pend:#6b7195; --pend-soft:#262a3f;
+    --bg:#f5f2ea; --surface:#ffffff; --surface2:#efeadd; --border:#e3ddcd;
+    --text:#2b2a2e; --dim:#6f6a5f; --faint:#a39c8b;
+    --gold:#c2902e; --gold-soft:#f4ecd6;
+    --vem:#2f9e63; --vem-soft:#e2f2e8;
+    --nao:#d8584d; --nao-soft:#fbe6e2;
+    --pend:#8a8578; --pend-soft:#ede8db;
     --r:14px; --r-sm:10px;
     --pad: max(env(safe-area-inset-bottom), 0px);
   }
@@ -42,7 +42,7 @@
 
   header{
     position:sticky; top:0; z-index:50;
-    background:rgba(21,22,31,.86); backdrop-filter:blur(12px);
+    background:rgba(245,242,234,.86); backdrop-filter:blur(12px);
     border-bottom:1px solid var(--border);
     padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;
   }
@@ -59,7 +59,7 @@
   .lock{
     max-width:760px; margin:8px auto 0; display:flex; align-items:center; gap:8px;
     font-size:12.5px; color:var(--gold); background:var(--gold-soft);
-    border:1px solid #4a3f23; border-radius:9px; padding:7px 11px;
+    border:1px solid #e6d29a; border-radius:9px; padding:7px 11px;
   }
 
   nav.tabs{
@@ -110,28 +110,37 @@
   .donut-center .num{font-family:Fraunces,serif; font-size:40px; font-weight:600; line-height:1; color:var(--gold);}
   .donut-center .lbl{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-top:3px;}
   .dash-stats{flex:1; min-width:0; display:flex; flex-direction:column; gap:9px;}
-  .stat{display:flex; align-items:center; gap:9px; font-size:13.5px;}
+  .stat{display:flex; align-items:center; gap:9px; font-size:13.5px; width:100%; text-align:left; padding:5px 7px; margin:-2px 0; border-radius:9px; border:1px solid transparent; background:transparent; transition:background .12s, border-color .12s;}
+  .stat:active{transform:scale(.99);}
+  .stat.active{background:var(--surface);}
+  .stat.active.v{border-color:color-mix(in srgb,var(--vem) 55%,transparent);}
+  .stat.active.n{border-color:color-mix(in srgb,var(--nao) 55%,transparent);}
+  .stat.active.p{border-color:var(--border);}
+  .chev{color:var(--faint); font-size:22px; line-height:1; flex:none; margin-left:4px;}
   .stat .pip{width:9px; height:9px;}
   .stat .stxt{flex:1; color:var(--dim);}
   .stat .sval{font-weight:700; font-variant-numeric:tabular-nums; font-size:15px;}
   .ac-split{display:flex; gap:9px; margin-top:3px;}
-  .ac-chip{flex:1; background:var(--vem-soft); border:1px solid #285c41; border-radius:10px; padding:8px 10px; text-align:center;}
+  .ac-chip{flex:1; background:var(--vem-soft); border:1px solid #bfe0cc; border-radius:10px; padding:8px 10px; text-align:center;}
   .ac-chip .n{font-family:Fraunces,serif; font-size:21px; font-weight:600; color:var(--vem);}
   .ac-chip .t{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--dim); margin-top:1px;}
 
   .fam{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); margin-bottom:11px; overflow:hidden;}
-  .fam-head{display:flex; align-items:center; gap:10px; padding:13px 14px; border-bottom:1px solid var(--border);}
+  .fam-head{display:flex; align-items:center; gap:10px; padding:10px 13px; border-bottom:1px solid var(--border);}
   .fam-name{flex:1; font-weight:600; font-size:15px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .fam-quick{display:flex; gap:5px; flex:none;}
   .qbtn{width:30px; height:30px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); display:grid; place-items:center; font-size:13px; font-weight:700;}
   .qbtn.v{color:var(--vem);} .qbtn.n{color:var(--nao);} .qbtn.p{color:var(--faint);}
   .qbtn:active{transform:scale(.9);}
-  .member{display:flex; align-items:center; gap:11px; padding:11px 14px;}
-  .member + .member{border-top:1px solid #2a2e44;}
+  .member{display:flex; align-items:center; gap:10px; padding:8px 13px;}
+  .member + .member{border-top:1px solid var(--border);}
+  .member.is-vem{background:color-mix(in srgb,var(--vem) 9%,transparent);}
+  .member.is-vem .m-name{color:var(--vem); font-weight:600;}
+  .member.is-nao .m-name{color:var(--nao);}
   .m-name{flex:1; min-width:0; font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .m-name .kid{font-size:11px; color:var(--faint); margin-left:6px; vertical-align:1px;}
   .seg{display:flex; background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:2px; flex:none;}
-  .seg button{padding:5px 0; width:34px; border-radius:7px; font-size:13px; font-weight:700; color:var(--faint); transition:all .12s;}
+  .seg button{padding:5px 0; width:31px; border-radius:7px; font-size:13px; font-weight:700; color:var(--faint); transition:all .12s;}
   .seg button.on.v{background:var(--vem-soft); color:var(--vem);}
   .seg button.on.n{background:var(--nao-soft); color:var(--nao);}
   .seg button.on.p{background:var(--pend-soft); color:var(--dim);}
@@ -174,11 +183,11 @@
     position:fixed; right:18px; bottom:calc(18px + var(--pad)); z-index:45;
     width:56px; height:56px; border-radius:18px; background:var(--gold); color:#15161f;
     font-size:28px; font-weight:600; display:grid; place-items:center;
-    box-shadow:0 8px 24px rgba(0,0,0,.4), 0 0 0 1px rgba(230,180,85,.3);
+    box-shadow:0 8px 22px rgba(60,50,20,.22), 0 0 0 1px rgba(194,144,46,.35);
   }
   .fab:active{transform:scale(.94);}
 
-  .scrim{position:fixed; inset:0; z-index:60; background:rgba(8,9,14,.6); backdrop-filter:blur(2px); display:none; align-items:flex-end; justify-content:center;}
+  .scrim{position:fixed; inset:0; z-index:60; background:rgba(40,38,32,.42); backdrop-filter:blur(2px); display:none; align-items:flex-end; justify-content:center;}
   .scrim.open{display:flex;}
   .sheet{
     width:100%; max-width:760px; background:var(--surface); border:1px solid var(--border);
@@ -267,8 +276,9 @@ const GRUPO_CORES=['#7aa2f7','#bb9af7','#4cc9d6','#e6b455','#e0935a','#c678dd','
 let appData={grupos:[], familias:[], eventos:[], _meta:{ng:1,nf:1,np:1,ne:1}};
 let fileSha=null;
 let TOKEN=localStorage.getItem(TOKEN_KEY)||'';
-let currentTab='eventos', currentEventId=null, donutChart=null;
+let currentTab='eventos', currentEventId=null, currentFamId=null, currentGroupId=null, donutChart=null;
 let _fichaGruposFiltro=new Set();
+let _fichaEstadoFiltro=null;
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -346,6 +356,10 @@ function toggleFichaGrupo(id){
   else _fichaGruposFiltro.add(id);
   const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy);
 }
+function toggleEstado(st){
+  _fichaEstadoFiltro=(_fichaEstadoFiltro===st)?null:st;
+  const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy);
+}
 
 /* ---------- chips de grupo ---------- */
 function gchipToggle(g,on,onclick){return `<button type="button" class="gchip${on?' on':''}" style="--gc:${g.cor||'#7aa2f7'}" onclick="${onclick}">${esc(g.nome)}</button>`;}
@@ -413,9 +427,12 @@ document.addEventListener('visibilitychange',()=>{
    ========================================================================= */
 function render(){
   $('#lockBanner').style.display=TOKEN?'none':'flex';
-  $('#tabsBar').style.display=currentEventId?'none':'flex';
-  $('#fab').style.display=currentEventId?'none':'grid';
+  const detalhe=currentEventId||currentFamId||currentGroupId;
+  $('#tabsBar').style.display=detalhe?'none':'flex';
+  $('#fab').style.display=detalhe?'none':'grid';
   if(currentEventId) return renderFicha();
+  if(currentFamId) return renderFamDetail();
+  if(currentGroupId) return renderGroupDetail();
   if(currentTab==='eventos') return renderEventos();
   return renderPessoas();
 }
@@ -454,23 +471,23 @@ function renderEventos(){
 
 function famCardHTML(f){
   const isMinha=f.id===appData.minhaFamiliaId;
-  const membros=sortedMembros(f.membros).map(p=>`
-    <span class="mtag ${p.tipo==='crianca'?'kid':''}">${esc(p.nome)}${p.tipo==='crianca'?' <span style="color:var(--faint);font-size:11px">criança</span>':''}
-      <button class="x" onclick="editarMembro(${f.id},${p.id})" title="Editar">✎</button>
-      <button class="x" onclick="removerMembro(${f.id},${p.id})" title="Remover">×</button></span>`).join('');
-  return `<div class="fam-card${isMinha?' minha':''}">
+  const ad=(f.membros||[]).filter(p=>p.tipo!=='crianca').length;
+  const ki=(f.membros||[]).filter(p=>p.tipo==='crianca').length;
+  const resumo=[ad?ad+(ad===1?' adulto':' adultos'):'', ki?ki+(ki===1?' criança':' crianças'):''].filter(Boolean).join(' · ')||'Sem membros';
+  const membros=sortedMembros(f.membros).map(p=>`<span class="mtag ${p.tipo==='crianca'?'kid':''}">${esc(p.nome)}</span>`).join('');
+  return `<div class="fam-card tap${isMinha?' minha':''}" onclick="abrirFamDetalhe(${f.id})">
     <div class="fam-card-head">
       <h3>${isMinha?'🏠 ':''}${esc(f.nome)}</h3>
-      <button class="mini-btn" onclick="abrirFamilia(${f.id})" title="Editar">✎</button>
-      <button class="mini-btn" onclick="removerFamilia(${f.id})" title="Apagar">🗑</button>
+      <span class="chev">›</span>
     </div>
-    <div class="mlist">${membros}<button class="add-m" onclick="abrirMembro(${f.id})">+ membro</button></div>
+    <div class="hint" style="margin:2px 0 0">${resumo}</div>
+    ${membros?`<div class="mlist">${membros}</div>`:''}
   </div>`;
 }
 function renderPessoas(){
   const gruposBar=`<div class="section-lbl">Grupos</div>
     <div class="gwrap" style="margin-bottom:20px">
-      ${appData.grupos.map(g=>`<button type="button" class="gchip ro tap" style="--gc:${g.cor||'#7aa2f7'}" onclick="abrirGrupo(${g.id})">${esc(g.nome)}</button>`).join('')}
+      ${appData.grupos.map(g=>`<button type="button" class="gchip ro tap" style="--gc:${g.cor||'#7aa2f7'}" onclick="abrirGrupoDetalhe(${g.id})">${esc(g.nome)}</button>`).join('')}
       <button type="button" class="add-m" onclick="abrirGrupo()">+ grupo</button>
     </div>`;
   if(!appData.familias.length){
@@ -497,6 +514,65 @@ function renderPessoas(){
   }
   $('#view').innerHTML=gruposBar+sections;
 }
+function abrirFamDetalhe(id){currentFamId=id; currentGroupId=null; window.scrollTo(0,0); render();}
+function abrirGrupoDetalhe(id){currentGroupId=id; currentFamId=null; window.scrollTo(0,0); render();}
+function voltarPessoas(){currentFamId=null; currentGroupId=null; window.scrollTo(0,0); render();}
+
+function renderFamDetail(){
+  const f=appData.familias.find(x=>x.id===currentFamId);
+  if(!f){currentFamId=null; return render();}
+  const isMinha=f.id===appData.minhaFamiliaId;
+  const gconv=(f.grupos||[]).map(grupoById).filter(Boolean);
+  const gline=gconv.length
+    ? `<div class="gwrap" style="margin:2px 0 14px">${gconv.map(g=>gchipRO(g)).join('')}</div>`
+    : `<div class="gwrap" style="margin:2px 0 14px"><span class="gchip ro neutral">Sem grupo</span></div>`;
+  const adultos=sortedMembros(f.membros).filter(p=>p.tipo!=='crianca');
+  const criancas=(f.membros||[]).filter(p=>p.tipo==='crianca');
+  const tag=p=>`<button type="button" class="mtag ${p.tipo==='crianca'?'kid':''}" onclick="editarMembro(${f.id},${p.id})">${esc(p.nome)} <span class="x">✎</span></button>`;
+  const linhaAd=adultos.length?`<div class="mlist">${adultos.map(tag).join('')}</div>`:`<p class="hint" style="margin:0">Sem adultos.</p>`;
+  const linhaKi=criancas.length?`<div class="mlist">${criancas.map(tag).join('')}</div>`:`<p class="hint" style="margin:0">Sem crianças.</p>`;
+  $('#view').innerHTML=`
+    <button class="back" onclick="voltarPessoas()">‹ Pessoas</button>
+    <div class="ficha-head">
+      <div class="ficha-title"><h1>${isMinha?'🏠 ':''}${esc(f.nome)}</h1></div>
+      <div class="ficha-actions"><button class="add-m" onclick="abrirMembro(${f.id})">+ membro</button></div>
+    </div>
+    ${gline}
+    <div class="section-lbl">Adultos</div>
+    ${linhaAd}
+    <div class="section-lbl" style="margin-top:16px">Crianças</div>
+    ${linhaKi}
+    <div class="sheet-actions" style="margin-top:24px">
+      <button class="btn ghost" onclick="abrirFamilia(${f.id})">Editar família</button>
+      <button class="btn danger" onclick="removerFamilia(${f.id})">Eliminar</button>
+    </div>
+    <p class="hint" style="margin-top:10px">Toca num nome para alterar ou remover esse membro.</p>`;
+}
+
+function renderGroupDetail(){
+  const g=grupoById(currentGroupId);
+  if(!g){currentGroupId=null; return render();}
+  const fams=appData.familias.filter(f=>(f.grupos||[]).includes(g.id)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+  const lista=fams.length
+    ? fams.map(famCardHTML).join('')
+    : `<div class="empty" style="padding:30px 20px"><p>Sem famílias neste grupo. Associa famílias a este grupo ao editá-las.</p></div>`;
+  $('#view').innerHTML=`
+    <button class="back" onclick="voltarPessoas()">‹ Pessoas</button>
+    <div class="ficha-head">
+      <div class="ficha-title">
+        <h1>${esc(g.nome)}</h1>
+        <div class="ev-meta">${fams.length} família${fams.length===1?'':'s'}</div>
+      </div>
+    </div>
+    <div class="gwrap" style="margin:2px 0 14px"><span class="gchip ro" style="--gc:${g.cor||'#7aa2f7'}">${esc(g.nome)}</span></div>
+    <div class="section-lbl">Famílias do grupo</div>
+    ${lista}
+    <div class="sheet-actions" style="margin-top:24px">
+      <button class="btn ghost" onclick="abrirGrupo(${g.id})">Editar grupo</button>
+      <button class="btn danger" onclick="removerGrupo(${g.id})">Eliminar</button>
+    </div>`;
+}
+
 function renderFicha(){
   const ev=appData.eventos.find(e=>e.id===currentEventId);
   if(!ev){currentEventId=null; return render();}
@@ -513,13 +589,21 @@ function renderFicha(){
 
   const fams=familiasParaDashboard(ev);
   const t=tallyFams(ev,fams);
-  const sectionLbl=filt.size>0?`Presenças — ${[...filt].map(id=>(grupoById(id)||{}).nome).filter(Boolean).join(', ')}`:'Presenças por família';
+  const estado=_fichaEstadoFiltro;
+  const estadoLbl={vem:'Vêm',nao:'Não vêm',pend:'Por responder'};
+  const sectionLbl = estado
+    ? `A mostrar: ${estadoLbl[estado]}`
+    : (filt.size>0?`Presenças — ${[...filt].map(id=>(grupoById(id)||{}).nome).filter(Boolean).join(', ')}`:'Presenças por família');
   const r=ev.respostas||{};
-  const famHtml = fams.length ? fams.map(f=>{
+  const famBlocks = fams.map(f=>{
     const isMinha=f.id===appData.minhaFamiliaId;
-    const membros=sortedMembros(f.membros).map(p=>{
+    let mem=sortedMembros(f.membros);
+    if(estado) mem=mem.filter(p=>((r[p.id]||'pend')===estado));
+    if(estado && !mem.length) return '';
+    const membros=mem.map(p=>{
       const st=r[p.id]||'pend';
-      return `<div class="member">
+      const cls=st==='vem'?' is-vem':st==='nao'?' is-nao':'';
+      return `<div class="member${cls}">
         <div class="m-name">${esc(p.nome)}${p.tipo==='crianca'?'<span class="kid">criança</span>':''}</div>
         <div class="seg">
           <button class="${st==='vem'?'on v':''}" onclick="setPresenca(${p.id},'vem')">✓</button>
@@ -539,7 +623,12 @@ function renderFicha(){
       </div>
       ${membros||'<div class="member"><div class="m-name" style="color:var(--faint)">Sem membros</div></div>'}
     </div>`;
-  }).join('') : `<div class="empty" style="padding:30px 20px"><p>Nenhuma família nos grupos convidados. Ajusta os grupos do evento ou associa famílias a esses grupos em Pessoas.</p></div>`;
+  }).filter(Boolean);
+  const famHtml = famBlocks.length
+    ? famBlocks.join('')
+    : (estado
+        ? `<div class="empty" style="padding:30px 20px"><p>Ninguém com o estado “${estadoLbl[estado]}”.</p></div>`
+        : `<div class="empty" style="padding:30px 20px"><p>Nenhuma família nos grupos convidados. Ajusta os grupos do evento ou associa famílias a esses grupos em Pessoas.</p></div>`);
 
   $('#view').innerHTML=`
     <button class="back" onclick="fecharFicha()">‹ Eventos</button>
@@ -561,9 +650,9 @@ function renderFicha(){
         <div class="donut-center"><div class="num">${t.vem}</div><div class="lbl">presenças</div></div>
       </div>
       <div class="dash-stats">
-        <div class="stat"><i class="pip v"></i><span class="stxt">Vêm</span><span class="sval">${t.vem}</span></div>
-        <div class="stat"><i class="pip n"></i><span class="stxt">Não vêm</span><span class="sval">${t.nao}</span></div>
-        <div class="stat"><i class="pip p"></i><span class="stxt">Por responder</span><span class="sval">${t.pend}</span></div>
+        <button type="button" class="stat v${estado==='vem'?' active':''}" onclick="toggleEstado('vem')"><i class="pip v"></i><span class="stxt">Vêm</span><span class="sval">${t.vem}</span></button>
+        <button type="button" class="stat n${estado==='nao'?' active':''}" onclick="toggleEstado('nao')"><i class="pip n"></i><span class="stxt">Não vêm</span><span class="sval">${t.nao}</span></button>
+        <button type="button" class="stat p${estado==='pend'?' active':''}" onclick="toggleEstado('pend')"><i class="pip p"></i><span class="stxt">Por responder</span><span class="sval">${t.pend}</span></button>
         <div class="ac-split">
           <div class="ac-chip"><div class="n">${t.vemA}</div><div class="t">Adultos</div></div>
           <div class="ac-chip"><div class="n">${t.vemC}</div><div class="t">Crianças</div></div>
@@ -583,7 +672,7 @@ function drawDonut(t){
   if(data.every(v=>v===0)) data[2]=1;
   donutChart=new Chart(cv,{type:'doughnut',data:{
     labels:['Vêm','Não vêm','Por responder'],
-    datasets:[{data, backgroundColor:[css.getPropertyValue('--vem').trim(),css.getPropertyValue('--nao').trim(),'#3a3f5c'], borderColor:css.getPropertyValue('--surface').trim(), borderWidth:2}]
+    datasets:[{data, backgroundColor:[css.getPropertyValue('--vem').trim(),css.getPropertyValue('--nao').trim(),'#d7d1c2'], borderColor:css.getPropertyValue('--surface').trim(), borderWidth:2}]
   },options:{cutout:'72%', plugins:{legend:{display:false},tooltip:{enabled:true}}, animation:{duration:350}}});
 }
 
@@ -607,10 +696,10 @@ function setFamilia(fid,st){
 /* =========================================================================
    NAVEGAÇÃO
    ========================================================================= */
-function abrirFicha(id){currentEventId=id; _fichaGruposFiltro=new Set(); window.scrollTo(0,0); render();}
+function abrirFicha(id){currentEventId=id; _fichaGruposFiltro=new Set(); _fichaEstadoFiltro=null; window.scrollTo(0,0); render();}
 function fecharFicha(){currentEventId=null; window.scrollTo(0,0); render();}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
-  currentTab=b.dataset.tab; currentEventId=null;
+  currentTab=b.dataset.tab; currentEventId=null; currentFamId=null; currentGroupId=null;
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
   render();
 });
@@ -652,6 +741,7 @@ function removerGrupo(id){
   appData.grupos=appData.grupos.filter(x=>x.id!==id);
   appData.familias.forEach(f=>{ if(f.grupos) f.grupos=f.grupos.filter(x=>x!==id); });
   appData.eventos.forEach(e=>{ if(e.grupos) e.grupos=e.grupos.filter(x=>x!==id); });
+  currentGroupId=null;
   closeSheet(); render(); scheduleSave('Grupo removido');
 }
 
@@ -728,6 +818,7 @@ function removerFamilia(id){
   const ids=(f.membros||[]).map(p=>p.id);
   appData.familias=appData.familias.filter(x=>x.id!==id);
   appData.eventos.forEach(e=>{ if(e.respostas) ids.forEach(pid=>delete e.respostas[pid]); });
+  currentFamId=null;
   render(); scheduleSave('Família removida');
 }
 
@@ -770,7 +861,7 @@ function editarMembro(fid,pid){
         <button type="button" class="${p.tipo==='crianca'?'on':''}" onclick="selMTipo('crianca')">Criança</button>
       </div></div>
     <div class="sheet-actions">
-      <button class="btn ghost" onclick="closeSheet()">Cancelar</button>
+      <button class="btn danger" onclick="closeSheet();removerMembro(${fid},${pid})">Eliminar</button>
       <button class="btn" onclick="guardarMembroEdit(${fid},${pid})">Guardar</button>
     </div>`);
   setTimeout(()=>$('#mNome')&&$('#mNome').focus(),60);
@@ -811,12 +902,16 @@ $('#btnSettings').onclick=()=>{
 };
 function guardarSettings(){
   const v=$('#tkInput').value.trim();
+  const tokenMudou = v!==TOKEN;
   TOKEN=v; v?localStorage.setItem(TOKEN_KEY,v):localStorage.removeItem(TOKEN_KEY);
   const mfv=$('#minhaFamSel').value;
   const mfid=mfv?Number(mfv):null;
-  if(mfid!==appData.minhaFamiliaId){ appData.minhaFamiliaId=mfid; scheduleSave('Minha família actualizada'); }
+  const famMudou = mfid!==(appData.minhaFamiliaId||null);
+  if(famMudou){ appData.minhaFamiliaId=mfid; scheduleSave('Minha família actualizada'); }
   closeSheet(); render(); toast('Definições guardadas');
-  if(v) carregar(true);
+  // só puxa do GitHub se o token mudou E não há alteração local por gravar
+  // (senão o reload apagava a "minha família" antes do push)
+  if(tokenMudou && v && !famMudou) carregar(true);
 }
 function guardarToken(){guardarSettings();}
 function limparToken(){TOKEN=''; localStorage.removeItem(TOKEN_KEY); closeSheet(); render(); toast('Token removido');}
