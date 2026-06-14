@@ -228,18 +228,89 @@
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
   @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important;}}
+
+  /* ===== round 2 + Supabase ===== */
+  .ficha-title h1{font-size:20px; line-height:1.15;}
+  .fam-card{padding:10px 14px; margin-bottom:8px;}
+  .fam-card-head{margin-bottom:0;}
+  .group-header{padding:12px 2px 6px;}
+  .fc-count{font-size:12px; color:var(--dim); font-variant-numeric:tabular-nums;}
+  .chev{margin-left:2px;}
+  .fam-dot{width:9px; height:9px; border-radius:50%; flex:none;}
+
+  /* dashboard reformulado */
+  .dash{display:flex; flex-direction:column; gap:11px; padding:14px; align-items:stretch;}
+  .dash-row3{display:flex; gap:9px; align-items:stretch;}
+  .dcell{flex:1; background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:10px 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; transition:border-color .12s, background .12s;}
+  .dcell:active{transform:scale(.98);}
+  .dcell.active{border-color:var(--gold); background:var(--gold-soft);}
+  .dcell .n{font-family:Fraunces,serif; font-size:23px; font-weight:600; color:var(--vem); line-height:1;}
+  .dcell .t{font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--dim);}
+  .donut-cell{padding:6px;}
+  .donut-cell.active{border-color:var(--vem); background:var(--vem-soft);}
+  .donut-wrap{width:92px; height:92px;}
+  .donut-center .num{font-size:27px;}
+  .donut-center .lbl{font-size:9px; margin-top:1px;}
+  .dash-row2{display:flex; gap:9px;}
+  .dbtn{flex:1; display:flex; align-items:center; justify-content:center; gap:7px; background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:10px 8px; font-size:12.5px; color:var(--dim); transition:border-color .12s, background .12s;}
+  .dbtn .pip{width:8px; height:8px;}
+  .dbtn b{color:var(--text); font-variant-numeric:tabular-nums; font-size:14px;}
+  .dbtn:active{transform:scale(.98);}
+  .dbtn.n.active{border-color:var(--nao); background:var(--nao-soft); color:var(--text);}
+  .dbtn.p.active{border-color:var(--pend); background:var(--pend-soft); color:var(--text);}
+
+  /* admin */
+  .badge{position:absolute; top:-5px; right:-5px; min-width:17px; height:17px; padding:0 4px; border-radius:9px; background:var(--nao); color:#fff; font-size:10px; font-weight:700; display:grid; place-items:center; line-height:1;}
+  .adm-row{display:flex; align-items:center; gap:8px; padding:9px 11px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; margin-bottom:7px;}
+  .adm-email{flex:1; font-size:13px; word-break:break-all;}
+
+  /* autenticação */
+  .auth-page{position:fixed; inset:0; z-index:90; background:var(--bg); display:none; flex-direction:column; align-items:center; justify-content:center; padding:34px 22px; text-align:center;}
+  .auth-page.show{display:flex;}
+  .auth-page h2{font-family:Fraunces,serif; font-size:30px; margin-bottom:8px;}
+  .auth-brand-dot{color:var(--gold);}
+  .auth-sub{color:var(--dim); font-size:14px; max-width:340px; margin:0 auto 22px; line-height:1.5;}
+  .auth-card{width:100%; max-width:340px; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:11px;}
+  .auth-btn{display:flex; align-items:center; justify-content:center; gap:9px; padding:12px 16px; border-radius:12px; font-weight:600; font-size:15px; border:1px solid var(--border); background:var(--surface2); color:var(--text);}
+  .auth-btn.google{background:#fff; border-color:#dadce0; color:#3c4043;}
+  .auth-btn.prim{background:var(--gold); border-color:var(--gold); color:#2b2a2e;}
+  .auth-btn.ghost{background:transparent; color:var(--dim); border-color:transparent;}
+  .auth-btn:active{transform:scale(.98);}
+  .auth-status{font-size:13px; color:var(--dim); min-height:18px;}
 </style>
 </head>
 <body>
+
+<div class="auth-page" id="page-login">
+  <h2>Gestão<span class="auth-brand-dot">·</span>Eventos</h2>
+  <div class="auth-sub">Gere as presenças dos teus almoços, jantares e festas. Inicia sessão para continuar.</div>
+  <div class="auth-card">
+    <button class="auth-btn google" onclick="sbLoginGoogle()">
+      <svg width="17" height="17" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+      Entrar com Google
+    </button>
+  </div>
+</div>
+
+<div class="auth-page" id="page-sem-acesso">
+  <h2>Sem acesso</h2>
+  <div class="auth-sub" id="sem-acesso-email"></div>
+  <div class="auth-card">
+    <button class="auth-btn prim" id="btn-solicitar" onclick="sbSolicitarAcesso()">Solicitar acesso</button>
+    <button class="auth-btn prim" id="btn-verificar" style="display:none" onclick="sbVerificarAcesso()">🔄 Verificar acesso</button>
+    <div class="auth-status" id="solicitar-status"></div>
+    <button class="auth-btn ghost" onclick="sbLogout()">Terminar sessão</button>
+  </div>
+</div>
 
 <header>
   <div class="hrow">
     <div class="brand">Gestão<span class="dot">·</span>Eventos</div>
     <div class="hspace"></div>
     <button class="icon-btn" id="btnReload" title="Sincronizar">↻</button>
+    <button class="icon-btn" id="btnAdmin" title="Pedidos de acesso" style="display:none;position:relative">🔔<span class="badge" id="admBadge" style="display:none">0</span></button>
     <button class="icon-btn" id="btnSettings" title="Definições">⚙</button>
   </div>
-  <div class="lock" id="lockBanner" style="display:none">🔒 Modo leitura — configura o token nas definições para gravar.</div>
 </header>
 
 <nav class="tabs" id="tabsBar">
@@ -262,10 +333,57 @@
    ge_dirty a travar o auto-pull, token em localStorage SEMPRE fora dos dados.
    ========================================================================= */
 
-const OWNER='diogoandrefsilva-ghc', DATA_REPO='AppDataJSON', PATH='gestaoeventos-data.json', BRANCH='main';
-const API_URL=`https://api.github.com/repos/${OWNER}/${DATA_REPO}/contents/${PATH}`;
-const RAW_URL=`https://raw.githubusercontent.com/${OWNER}/${DATA_REPO}/${BRANCH}/${PATH}`;
-const TOKEN_KEY='ge_gh_token';
+const SB_URL='https://gjweqwfbnkgnibhajldc.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdqd2Vxd2ZibmtnbmliaGFqbGRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMDk4NzUsImV4cCI6MjA5NjY4NTg3NX0.h6st-RayGhQdsqH7E2Ko-rPWk2QZUpTevO6cbjvlSnk';
+const SB_SCHEMA='gestaoeventos';
+const ADMIN_EMAIL='diogo.andre.f.silva@gmail.com';
+const SESSION_KEY='gestaoeventos_sb_session';
+let _sbSession=null, _refreshing=null;
+
+function sbHeaders(extra={}){
+  return Object.assign({
+    'Content-Type':'application/json',
+    'apikey':SB_KEY,
+    'Authorization':`Bearer ${_sbSession?.access_token||SB_KEY}`,
+    'Accept-Profile':SB_SCHEMA,
+    'Content-Profile':SB_SCHEMA
+  }, extra);
+}
+function sbSaveSession(s){ _sbSession=s; try{localStorage.setItem(SESSION_KEY,JSON.stringify(s));}catch(_){} }
+function tokenQuaseExpirado(){ if(!_sbSession) return false; if(!_sbSession.expires_at) return true; return (_sbSession.expires_at-Date.now()/1000)<120; }
+async function sbRefresh(){
+  if(!_sbSession||!_sbSession.refresh_token) return false;
+  if(_refreshing) return _refreshing;
+  _refreshing=(async()=>{
+    try{
+      const r=await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`,{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:_sbSession.refresh_token})});
+      if(!r.ok) return false;
+      const d=await r.json();
+      sbSaveSession({access_token:d.access_token, refresh_token:d.refresh_token||_sbSession.refresh_token, expires_at:d.expires_at||Math.floor(Date.now()/1000)+(d.expires_in||3600), user:d.user||_sbSession.user});
+      return true;
+    }catch(e){ return false; }
+  })();
+  const ok=await _refreshing; _refreshing=null; return ok;
+}
+async function sbEnsureFresh(){ if(_sbSession&&_sbSession.refresh_token&&tokenQuaseExpirado()) await sbRefresh(); }
+async function sbFetch(url,opt){
+  await sbEnsureFresh(); opt=opt||{};
+  opt.headers=Object.assign({},opt.headers,{'Authorization':`Bearer ${_sbSession?.access_token||SB_KEY}`});
+  let r=await fetch(url,opt);
+  if(r.status===401&&_sbSession&&_sbSession.refresh_token&&await sbRefresh()){
+    opt.headers['Authorization']=`Bearer ${_sbSession.access_token}`; r=await fetch(url,opt);
+  }
+  return r;
+}
+async function sbReq(method,path,body,extra){
+  const opt={method,headers:sbHeaders(extra||{})};
+  if(body!==undefined) opt.body=JSON.stringify(body);
+  const r=await sbFetch(`${SB_URL}/rest/v1/${path}`,opt);
+  if(!r.ok){let m='HTTP '+r.status;try{const j=await r.json();m=j.message||m;}catch(_){ } throw new Error(m);}
+  const tx=await r.text(); return tx?JSON.parse(tx):null;
+}
+function isAdmin(){ return !!_sbSession&&_sbSession.user&&_sbSession.user.email===ADMIN_EMAIL; }
+setInterval(()=>{ sbEnsureFresh(); }, 10*60*1000);
 
 const TIPOS={
   almoco:{e:'🍴',l:'Almoço'}, jantar:{e:'🍷',l:'Jantar'},
@@ -274,11 +392,9 @@ const TIPOS={
 const GRUPO_CORES=['#7aa2f7','#bb9af7','#4cc9d6','#e6b455','#e0935a','#c678dd','#5fd08a','#f7768e'];
 
 let appData={grupos:[], familias:[], eventos:[], _meta:{ng:1,nf:1,np:1,ne:1}};
-let fileSha=null;
-let TOKEN=localStorage.getItem(TOKEN_KEY)||'';
 let currentTab='eventos', currentEventId=null, currentFamId=null, currentGroupId=null, donutChart=null;
 let _fichaGruposFiltro=new Set();
-let _fichaEstadoFiltro=null;
+let _fEstado=null, _fCat=null;
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -342,12 +458,15 @@ function familiasParaDashboard(ev){
 function tallyFams(ev,fams){
   const r=ev.respostas||{};
   let vemA=0,vemC=0,naoA=0,naoC=0,pendA=0,pendC=0;
-  fams.forEach(f=>sortedMembros(f.membros).forEach(p=>{
-    const st=r[p.id]; const kid=p.tipo==='crianca';
-    if(st==='vem'){kid?vemC++:vemA++;}
-    else if(st==='nao'){kid?naoC++:naoA++;}
-    else{kid?pendC++:pendA++;}
-  }));
+  fams.forEach(f=>{
+    const def=f.id===appData.minhaFamiliaId?'vem':'pend';
+    sortedMembros(f.membros).forEach(p=>{
+      const st=r[p.id]||def; const kid=p.tipo==='crianca';
+      if(st==='vem'){kid?vemC++:vemA++;}
+      else if(st==='nao'){kid?naoC++:naoA++;}
+      else{kid?pendC++:pendA++;}
+    });
+  });
   return {vemA,vemC,naoA,naoC,pendA,pendC, vem:vemA+vemC, nao:naoA+naoC, pend:pendA+pendC};
 }
 function tally(ev){return tallyFams(ev,familiasDoEvento(ev));}
@@ -356,8 +475,9 @@ function toggleFichaGrupo(id){
   else _fichaGruposFiltro.add(id);
   const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy);
 }
-function toggleEstado(st){
-  _fichaEstadoFiltro=(_fichaEstadoFiltro===st)?null:st;
+function setFiltro(estado,cat){
+  if(_fEstado===estado && _fCat===cat){ _fEstado=null; _fCat=null; }
+  else { _fEstado=estado; _fCat=cat; }
   const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy);
 }
 
@@ -366,28 +486,29 @@ function gchipToggle(g,on,onclick){return `<button type="button" class="gchip${o
 function gchipRO(g,extra){return `<span class="gchip ro ${extra||''}" style="--gc:${g.cor||'#7aa2f7'}">${esc(g.nome)}</span>`;}
 
 /* =========================================================================
-   SYNC GITHUB
+   SYNC SUPABASE (schema gestaoeventos) — nomes carregar/pushToGitHub preservados
    ========================================================================= */
 async function carregar(silent){
+  if(!_sbSession) return;
   try{
-    let parsed=null, sha=null;
-    if(TOKEN){
-      const r=await fetch(`${API_URL}?ref=${BRANCH}&t=${Date.now()}`,
-        {headers:{'Authorization':'token '+TOKEN,'Accept':'application/vnd.github+json'}});
-      if(r.ok){const d=await r.json(); sha=d.sha; parsed=JSON.parse(b64dec(d.content));}
-      else if(r.status===401){toast('Token inválido — modo leitura'); TOKEN=''; localStorage.removeItem(TOKEN_KEY);}
-    }
-    if(parsed===null){
-      const r=await fetch(`${RAW_URL}?t=${Date.now()}`);
-      if(r.ok){parsed=await r.json();}
-      else if(r.status===404){parsed={grupos:[],familias:[],eventos:[],_meta:{ng:1,nf:1,np:1,ne:1}};}
-      else throw new Error('HTTP '+r.status);
-    }
-    appData=parsed||{grupos:[],familias:[],eventos:[],_meta:{}};
-    fileSha=sha; ensureMeta(); render();
+    const [g,f,e,c]=await Promise.all([
+      sbReq('GET','grupos?select=*&order=id.asc'),
+      sbReq('GET','familias?select=*&order=id.asc'),
+      sbReq('GET','eventos?select=*&order=id.asc'),
+      sbReq('GET','config?id=eq.1&select=*')
+    ]);
+    const cfg=(Array.isArray(c)&&c[0])||{};
+    appData={
+      grupos:(g||[]).map(x=>({id:x.id,nome:x.nome,cor:x.cor})),
+      familias:(f||[]).map(x=>({id:x.id,nome:x.nome,grupos:x.grupos||[],membros:x.membros||[]})),
+      eventos:(e||[]).map(x=>({id:x.id,nome:x.nome,tipo:x.tipo,data:x.data||'',hora:x.hora||'',local:x.local||'',notas:x.notas||'',grupos:x.grupos||[],respostas:x.respostas||{}})),
+      minhaFamiliaId:(cfg.minha_familia_id!=null?cfg.minha_familia_id:null),
+      _meta:cfg.meta||{ng:1,nf:1,np:1,ne:1}
+    };
+    ensureMeta(); render();
     if(!silent) toast('Sincronizado');
-  }catch(e){
-    console.error(e);
+  }catch(err){
+    console.error(err);
     if(!silent) toast('Não consegui ler os dados');
     ensureMeta(); render();
   }
@@ -399,34 +520,33 @@ function scheduleSave(msg){
   _saveTimer=setTimeout(()=>{ ge_dirty=false; pushToGitHub(msg); }, 1100);
 }
 function pushToGitHub(msg){
-  if(!TOKEN){toast('Configura o token para gravar'); return Promise.resolve(false);}
+  if(!_sbSession){toast('Sessão expirada — volta a entrar'); return Promise.resolve(false);}
+  const snap=JSON.parse(JSON.stringify(appData));
   _writePending++;
-  _writeChain=_writeChain.then(()=>_doPush(msg)).catch(e=>{console.error(e);return false;})
+  _writeChain=_writeChain.then(()=>_sbSaveAll(snap)).catch(e=>{console.error(e);return false;})
     .finally(()=>{_writePending=Math.max(0,_writePending-1);});
   return _writeChain;
 }
-async function _doPush(msg){
-  const content=b64enc(JSON.stringify(appData,null,2));
-  const body={message:msg||('GestãoEventos '+new Date().toISOString()),content,branch:BRANCH};
-  if(fileSha) body.sha=fileSha;
-  const hdr={'Authorization':'token '+TOKEN,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
-  let r=await fetch(API_URL,{method:'PUT',headers:hdr,body:JSON.stringify(body)});
-  if(r.status===409){
-    const g=await fetch(`${API_URL}?ref=${BRANCH}&t=${Date.now()}`,{headers:hdr});
-    if(g.ok){const gd=await g.json(); body.sha=gd.sha; r=await fetch(API_URL,{method:'PUT',headers:hdr,body:JSON.stringify(body)});}
-  }
-  if(r.ok){const d=await r.json(); fileSha=d.content.sha; return true;}
-  const err=await r.json().catch(()=>({})); toast('Erro ao gravar ('+r.status+')'); console.error(err); return false;
+async function _sbSaveAll(d){
+  try{
+    await sbReq('POST','config?on_conflict=id',[{id:1,minha_familia_id:(d.minhaFamiliaId!=null?d.minhaFamiliaId:null),meta:d._meta}],{Prefer:'resolution=merge-duplicates,return=minimal'});
+    await sbReq('DELETE','grupos?id=gt.0');
+    if(d.grupos.length) await sbReq('POST','grupos',d.grupos.map(g=>({id:g.id,nome:g.nome,cor:g.cor||null})),{Prefer:'return=minimal'});
+    await sbReq('DELETE','familias?id=gt.0');
+    if(d.familias.length) await sbReq('POST','familias',d.familias.map(f=>({id:f.id,nome:f.nome,grupos:f.grupos||[],membros:f.membros||[]})),{Prefer:'return=minimal'});
+    await sbReq('DELETE','eventos?id=gt.0');
+    if(d.eventos.length) await sbReq('POST','eventos',d.eventos.map(e=>({id:e.id,nome:e.nome,tipo:e.tipo||null,data:e.data||null,hora:e.hora||null,local:e.local||null,notas:e.notas||null,grupos:e.grupos||[],respostas:e.respostas||{}})),{Prefer:'return=minimal'});
+    return true;
+  }catch(e){ console.error(e); toast('Erro ao gravar: '+e.message); return false; }
 }
 document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible' && _writePending===0 && !ge_dirty) carregar(true);
+  if(document.visibilityState==='visible' && _sbSession && _writePending===0 && !ge_dirty) carregar(true);
 });
 
 /* =========================================================================
    RENDER
    ========================================================================= */
 function render(){
-  $('#lockBanner').style.display=TOKEN?'none':'flex';
   const detalhe=currentEventId||currentFamId||currentGroupId;
   $('#tabsBar').style.display=detalhe?'none':'flex';
   $('#fab').style.display=detalhe?'none':'grid';
@@ -473,15 +593,13 @@ function famCardHTML(f){
   const isMinha=f.id===appData.minhaFamiliaId;
   const ad=(f.membros||[]).filter(p=>p.tipo!=='crianca').length;
   const ki=(f.membros||[]).filter(p=>p.tipo==='crianca').length;
-  const resumo=[ad?ad+(ad===1?' adulto':' adultos'):'', ki?ki+(ki===1?' criança':' crianças'):''].filter(Boolean).join(' · ')||'Sem membros';
-  const membros=sortedMembros(f.membros).map(p=>`<span class="mtag ${p.tipo==='crianca'?'kid':''}">${esc(p.nome)}</span>`).join('');
+  const resumo=[ad?ad+'A':'', ki?ki+'C':''].filter(Boolean).join(' · ')||'—';
   return `<div class="fam-card tap${isMinha?' minha':''}" onclick="abrirFamDetalhe(${f.id})">
     <div class="fam-card-head">
       <h3>${isMinha?'🏠 ':''}${esc(f.nome)}</h3>
+      <span class="fc-count">${resumo}</span>
       <span class="chev">›</span>
     </div>
-    <div class="hint" style="margin:2px 0 0">${resumo}</div>
-    ${membros?`<div class="mlist">${membros}</div>`:''}
   </div>`;
 }
 function renderPessoas(){
@@ -589,19 +707,23 @@ function renderFicha(){
 
   const fams=familiasParaDashboard(ev);
   const t=tallyFams(ev,fams);
-  const estado=_fichaEstadoFiltro;
   const estadoLbl={vem:'Vêm',nao:'Não vêm',pend:'Por responder'};
-  const sectionLbl = estado
-    ? `A mostrar: ${estadoLbl[estado]}`
+  const catLbl={adulto:'adultos',crianca:'crianças'};
+  const filtLbl=_fEstado?(estadoLbl[_fEstado]+(_fCat?' · '+catLbl[_fCat]:'')):null;
+  const sectionLbl = filtLbl
+    ? `A mostrar: ${filtLbl}`
     : (filt.size>0?`Presenças — ${[...filt].map(id=>(grupoById(id)||{}).nome).filter(Boolean).join(', ')}`:'Presenças por família');
   const r=ev.respostas||{};
+  const corDaFamilia=f=> f.id===appData.minhaFamiliaId ? 'var(--gold)' : (((f.grupos||[]).map(grupoById).find(Boolean)||{}).cor || '#7aa2f7');
   const famBlocks = fams.map(f=>{
     const isMinha=f.id===appData.minhaFamiliaId;
+    const def=isMinha?'vem':'pend';
     let mem=sortedMembros(f.membros);
-    if(estado) mem=mem.filter(p=>((r[p.id]||'pend')===estado));
-    if(estado && !mem.length) return '';
+    if(_fEstado) mem=mem.filter(p=>((r[p.id]||def)===_fEstado));
+    if(_fCat) mem=mem.filter(p=> _fCat==='adulto' ? p.tipo!=='crianca' : p.tipo==='crianca');
+    if((_fEstado||_fCat) && !mem.length) return '';
     const membros=mem.map(p=>{
-      const st=r[p.id]||'pend';
+      const st=r[p.id]||def;
       const cls=st==='vem'?' is-vem':st==='nao'?' is-nao':'';
       return `<div class="member${cls}">
         <div class="m-name">${esc(p.nome)}${p.tipo==='crianca'?'<span class="kid">criança</span>':''}</div>
@@ -612,9 +734,11 @@ function renderFicha(){
         </div>
       </div>`;
     }).join('');
+    const cor=corDaFamilia(f);
     return `<div class="fam${isMinha?' minha':''}">
-      <div class="fam-head">
-        <div class="fam-name">${isMinha?'🏠 ':''}${esc(f.nome)}</div>
+      <div class="fam-head" style="background:color-mix(in srgb, ${cor} 15%, var(--surface)); border-bottom-color:color-mix(in srgb, ${cor} 35%, var(--border))">
+        <span class="fam-dot" style="background:${cor}"></span>
+        <div class="fam-name" style="color:color-mix(in srgb, ${cor} 55%, var(--text))">${isMinha?'🏠 ':''}${esc(f.nome)}</div>
         <div class="fam-quick">
           <button class="qbtn v" onclick="setFamilia(${f.id},'vem')" title="Todos vêm">✓</button>
           <button class="qbtn n" onclick="setFamilia(${f.id},'nao')" title="Todos não">✗</button>
@@ -626,8 +750,8 @@ function renderFicha(){
   }).filter(Boolean);
   const famHtml = famBlocks.length
     ? famBlocks.join('')
-    : (estado
-        ? `<div class="empty" style="padding:30px 20px"><p>Ninguém com o estado “${estadoLbl[estado]}”.</p></div>`
+    : ((_fEstado||_fCat)
+        ? `<div class="empty" style="padding:30px 20px"><p>Ninguém para o filtro “${filtLbl||''}”.</p></div>`
         : `<div class="empty" style="padding:30px 20px"><p>Nenhuma família nos grupos convidados. Ajusta os grupos do evento ou associa famílias a esses grupos em Pessoas.</p></div>`);
 
   $('#view').innerHTML=`
@@ -645,18 +769,19 @@ function renderFicha(){
     </div>
     ${gline}
     <div class="dash">
-      <div class="donut-wrap">
-        <canvas id="donut" width="128" height="128"></canvas>
-        <div class="donut-center"><div class="num">${t.vem}</div><div class="lbl">presenças</div></div>
+      <div class="dash-row3">
+        <button type="button" class="dcell donut-cell${(_fEstado==='vem'&&!_fCat)?' active':''}" onclick="setFiltro('vem',null)">
+          <div class="donut-wrap">
+            <canvas id="donut" width="92" height="92"></canvas>
+            <div class="donut-center"><div class="num">${t.vem}</div><div class="lbl">vêm</div></div>
+          </div>
+        </button>
+        <button type="button" class="dcell${(_fEstado==='vem'&&_fCat==='adulto')?' active':''}" onclick="setFiltro('vem','adulto')"><div class="n">${t.vemA}</div><div class="t">Adultos</div></button>
+        <button type="button" class="dcell${(_fEstado==='vem'&&_fCat==='crianca')?' active':''}" onclick="setFiltro('vem','crianca')"><div class="n">${t.vemC}</div><div class="t">Crianças</div></button>
       </div>
-      <div class="dash-stats">
-        <button type="button" class="stat v${estado==='vem'?' active':''}" onclick="toggleEstado('vem')"><i class="pip v"></i><span class="stxt">Vêm</span><span class="sval">${t.vem}</span></button>
-        <button type="button" class="stat n${estado==='nao'?' active':''}" onclick="toggleEstado('nao')"><i class="pip n"></i><span class="stxt">Não vêm</span><span class="sval">${t.nao}</span></button>
-        <button type="button" class="stat p${estado==='pend'?' active':''}" onclick="toggleEstado('pend')"><i class="pip p"></i><span class="stxt">Por responder</span><span class="sval">${t.pend}</span></button>
-        <div class="ac-split">
-          <div class="ac-chip"><div class="n">${t.vemA}</div><div class="t">Adultos</div></div>
-          <div class="ac-chip"><div class="n">${t.vemC}</div><div class="t">Crianças</div></div>
-        </div>
+      <div class="dash-row2">
+        <button type="button" class="dbtn n${_fEstado==='nao'?' active':''}" onclick="setFiltro('nao',null)"><i class="pip n"></i> Não vêm <b>${t.nao}</b></button>
+        <button type="button" class="dbtn p${_fEstado==='pend'?' active':''}" onclick="setFiltro('pend',null)"><i class="pip p"></i> Por responder <b>${t.pend}</b></button>
       </div>
     </div>
     <div class="section-lbl">${sectionLbl}</div>
@@ -682,21 +807,24 @@ function drawDonut(t){
 function setPresenca(pid,st){
   const ev=appData.eventos.find(e=>e.id===currentEventId); if(!ev) return;
   ev.respostas=ev.respostas||{};
-  if(st==='pend') delete ev.respostas[pid]; else ev.respostas[pid]=st;
+  const f=appData.familias.find(x=>(x.membros||[]).some(m=>m.id===pid));
+  const def=(f&&f.id===appData.minhaFamiliaId)?'vem':'pend';
+  if(st===def) delete ev.respostas[pid]; else ev.respostas[pid]=st;
   renderFicha(); scheduleSave('Presença atualizada: '+ev.nome);
 }
 function setFamilia(fid,st){
   const ev=appData.eventos.find(e=>e.id===currentEventId); if(!ev) return;
   const f=appData.familias.find(x=>x.id===fid); if(!f) return;
   ev.respostas=ev.respostas||{};
-  (f.membros||[]).forEach(p=>{ if(st==='pend') delete ev.respostas[p.id]; else ev.respostas[p.id]=st; });
+  const def=fid===appData.minhaFamiliaId?'vem':'pend';
+  (f.membros||[]).forEach(p=>{ if(st===def) delete ev.respostas[p.id]; else ev.respostas[p.id]=st; });
   renderFicha(); scheduleSave('Família '+f.nome+' atualizada: '+ev.nome);
 }
 
 /* =========================================================================
    NAVEGAÇÃO
    ========================================================================= */
-function abrirFicha(id){currentEventId=id; _fichaGruposFiltro=new Set(); _fichaEstadoFiltro=null; window.scrollTo(0,0); render();}
+function abrirFicha(id){currentEventId=id; _fichaGruposFiltro=new Set(); _fEstado=null; _fCat=null; window.scrollTo(0,0); render();}
 function fecharFicha(){currentEventId=null; window.scrollTo(0,0); render();}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   currentTab=b.dataset.tab; currentEventId=null; currentFamId=null; currentGroupId=null;
@@ -705,6 +833,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
 });
 $('#fab').onclick=()=>{ currentTab==='eventos'?abrirEvento():abrirFamilia(); };
 $('#btnReload').onclick=()=>carregar(false);
+$('#btnAdmin').onclick=()=>abrirAdmin();
 
 /* =========================================================================
    MODAIS
@@ -886,38 +1015,140 @@ function removerMembro(fid,pid){
 /* ---- Definições ---- */
 $('#btnSettings').onclick=()=>{
   const famOpts=appData.familias.map(f=>`<option value="${f.id}" ${appData.minhaFamiliaId===f.id?'selected':''}>${esc(f.nome)}</option>`).join('');
+  const email=_sbSession?.user?.email||'';
   openSheet(`<h2>Definições</h2>
-    <div class="field"><label>Token GitHub (escrita no AppDataJSON)</label>
-      <input id="tkInput" type="password" placeholder="github_pat_…" value="${esc(TOKEN)}"></div>
-    <p class="hint">Token fine-grained com <b>Contents: write</b> no repo <b>AppDataJSON</b>. Pode ser o mesmo das outras apps. Fica só neste dispositivo (localStorage), nunca nos dados. Sem token = modo leitura.</p>
-    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
-    <div class="field"><label>Minha família (sempre incluída em todos os eventos 🏠)</label>
+    <div class="field"><label>Minha família (sempre presente por defeito 🏠)</label>
       <select id="minhaFamSel"><option value="">— nenhuma —</option>${famOpts}</select></div>
-    <p class="hint">Aparece em todos os eventos, mesmo que o grupo não seja convidado.</p>
+    <p class="hint">Aparece em todos os eventos, com todos os membros marcados como presentes por defeito.</p>
     <div class="sheet-actions">
-      <button class="btn ghost" onclick="limparToken()">Remover token</button>
       <button class="btn" onclick="guardarSettings()">Guardar</button>
     </div>
-    <p class="hint" style="margin-top:16px">Dados: <b>${OWNER}/${DATA_REPO}/${PATH}</b></p>`);
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+    <p class="hint" style="margin-top:0">Sessão: <b>${esc(email)}</b>${isAdmin()?' · <b>admin</b>':''}</p>
+    <div class="sheet-actions"><button class="btn ghost" onclick="sbLogout()">Terminar sessão</button></div>`);
 };
 function guardarSettings(){
-  const v=$('#tkInput').value.trim();
-  const tokenMudou = v!==TOKEN;
-  TOKEN=v; v?localStorage.setItem(TOKEN_KEY,v):localStorage.removeItem(TOKEN_KEY);
   const mfv=$('#minhaFamSel').value;
   const mfid=mfv?Number(mfv):null;
-  const famMudou = mfid!==(appData.minhaFamiliaId||null);
-  if(famMudou){ appData.minhaFamiliaId=mfid; scheduleSave('Minha família actualizada'); }
+  if(mfid!==(appData.minhaFamiliaId||null)){ appData.minhaFamiliaId=mfid; scheduleSave('Minha família actualizada'); }
   closeSheet(); render(); toast('Definições guardadas');
-  // só puxa do GitHub se o token mudou E não há alteração local por gravar
-  // (senão o reload apagava a "minha família" antes do push)
-  if(tokenMudou && v && !famMudou) carregar(true);
 }
-function guardarToken(){guardarSettings();}
-function limparToken(){TOKEN=''; localStorage.removeItem(TOKEN_KEY); closeSheet(); render(); toast('Token removido');}
+
+/* =========================================================================
+   AUTH (Supabase — só Google) + ADMIN
+   ========================================================================= */
+async function sbInit(){
+  const stored=localStorage.getItem(SESSION_KEY);
+  if(stored){
+    try{
+      _sbSession=JSON.parse(stored);
+      if(tokenQuaseExpirado()) await sbRefresh();
+      let r=await fetch(`${SB_URL}/auth/v1/user`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${_sbSession.access_token}`}});
+      if(!r.ok&&_sbSession.refresh_token&&await sbRefresh())
+        r=await fetch(`${SB_URL}/auth/v1/user`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${_sbSession.access_token}`}});
+      if(r.ok){const u=await r.json(); sbSaveSession({..._sbSession,user:u}); return sbAposLogin();}
+    }catch(e){}
+    _sbSession=null; localStorage.removeItem(SESSION_KEY);
+  }
+  const hash=window.location.hash;
+  if(hash.includes('access_token')){
+    const p=new URLSearchParams(hash.substring(1));
+    const access_token=p.get('access_token'), refresh_token=p.get('refresh_token');
+    const expires_at=parseInt(p.get('expires_at'))||Math.floor(Date.now()/1000)+(parseInt(p.get('expires_in'))||3600);
+    if(access_token){
+      const r=await fetch(`${SB_URL}/auth/v1/user`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${access_token}`}});
+      if(r.ok){
+        const u=await r.json();
+        sbSaveSession({access_token,refresh_token,expires_at,user:u});
+        window.history.replaceState({},document.title,window.location.pathname);
+        return sbAposLogin();
+      }
+    }
+  }
+  sbMostrarLogin();
+}
+function sbMostrarLogin(){ $('#page-login').classList.add('show'); $('#page-sem-acesso').classList.remove('show'); }
+async function sbAposLogin(){
+  $('#page-login').classList.remove('show');
+  const email=_sbSession.user.email;
+  let data=null;
+  try{ const r=await sbFetch(`${SB_URL}/rest/v1/allowed_users?email=eq.${encodeURIComponent(email)}&select=email`,{headers:sbHeaders()}); if(r.ok) data=await r.json(); }catch(e){}
+  if(!Array.isArray(data)||!data.length){
+    $('#page-sem-acesso').classList.add('show');
+    $('#sem-acesso-email').textContent=`Sessão iniciada como ${email}. Esta conta ainda não tem acesso.`;
+    return;
+  }
+  $('#page-sem-acesso').classList.remove('show');
+  $('#btnAdmin').style.display=isAdmin()?'grid':'none';
+  await carregar(true);
+  if(isAdmin()) refreshAdminBadge();
+}
+function sbLoginGoogle(){ window.location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.href.split('#')[0])}`; }
+async function sbSolicitarAcesso(){
+  if(!_sbSession) return;
+  const btn=$('#btn-solicitar'), btnV=$('#btn-verificar'), status=$('#solicitar-status');
+  btn.disabled=true; btn.textContent='A enviar…';
+  try{
+    const r=await sbFetch(`${SB_URL}/rest/v1/access_requests`,{method:'POST',headers:sbHeaders({'Prefer':'return=minimal'}),body:JSON.stringify({email:_sbSession.user.email})});
+    if(r.ok||r.status===409){
+      status.style.color='var(--vem)';
+      status.textContent=r.status===409?'✓ Pedido já registado. Aguarda aprovação.':'✓ Pedido enviado! Aguarda aprovação.';
+      btn.style.display='none'; btnV.style.display=''; return;
+    }
+    let msg='HTTP '+r.status; try{const j=await r.json(); msg=j.message||msg;}catch(_){}
+    if(r.status===401) msg='Sessão expirada — sai e volta a entrar.';
+    status.style.color='var(--nao)'; status.textContent='Erro: '+msg;
+    btn.disabled=false; btn.textContent='Solicitar acesso';
+  }catch(e){ status.style.color='var(--nao)'; status.textContent='Erro de ligação.'; btn.disabled=false; btn.textContent='Solicitar acesso'; }
+}
+async function sbVerificarAcesso(){
+  const btn=$('#btn-verificar'), status=$('#solicitar-status');
+  btn.disabled=true; btn.textContent='A verificar…';
+  await sbAposLogin();
+  btn.disabled=false; btn.textContent='🔄 Verificar acesso';
+  if($('#page-sem-acesso').classList.contains('show')){ status.style.color='var(--dim)'; status.textContent='Acesso ainda não aprovado. Tenta mais tarde.'; }
+}
+function sbLogout(){ localStorage.removeItem(SESSION_KEY); _sbSession=null; window.location.reload(); }
+
+async function refreshAdminBadge(){
+  if(!isAdmin()) return;
+  try{ const reqs=await sbReq('GET','access_requests?select=email'); const n=(reqs||[]).length;
+    const b=$('#admBadge'); b.textContent=n; b.style.display=n?'grid':'none'; }catch(e){}
+}
+function abrirAdmin(){
+  openSheet(`<h2>Pedidos de acesso</h2>
+    <div id="adm-pedidos-list"><p class="hint" style="margin:0">A carregar…</p></div>
+    <div class="sheet-actions" style="margin-top:14px"><button class="btn ghost" onclick="closeSheet()">Fechar</button></div>`);
+  sbRenderPedidos();
+}
+async function sbRenderPedidos(){
+  const box=$('#adm-pedidos-list'); if(!box) return;
+  try{
+    const reqs=await sbReq('GET','access_requests?select=email,requested_at&order=requested_at.asc');
+    if(!reqs||!reqs.length){ box.innerHTML='<p class="hint" style="margin:0">Sem pedidos pendentes.</p>'; return; }
+    box.innerHTML=reqs.map(rq=>`<div class="adm-row">
+      <span class="adm-email">${esc(rq.email)}</span>
+      <button class="qbtn v" title="Aprovar" onclick="sbAprovar('${esc(rq.email)}')">✓</button>
+      <button class="qbtn n" title="Recusar" onclick="sbRecusar('${esc(rq.email)}')">✗</button>
+    </div>`).join('');
+  }catch(e){ box.innerHTML='<p class="hint" style="margin:0">Erro a carregar pedidos.</p>'; }
+}
+async function sbAprovar(email){
+  try{
+    await sbReq('POST','allowed_users',[{email}],{Prefer:'resolution=merge-duplicates,return=minimal'});
+    await sbReq('DELETE',`access_requests?email=eq.${encodeURIComponent(email)}`);
+    toast('Acesso aprovado'); sbRenderPedidos(); refreshAdminBadge();
+  }catch(e){ toast('Erro: '+e.message); }
+}
+async function sbRecusar(email){
+  try{
+    await sbReq('DELETE',`access_requests?email=eq.${encodeURIComponent(email)}`);
+    toast('Pedido removido'); sbRenderPedidos(); refreshAdminBadge();
+  }catch(e){ toast('Erro: '+e.message); }
+}
 
 /* ---------- arranque ---------- */
-ensureMeta(); render(); carregar(true);
+ensureMeta(); render(); sbInit();
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
 </body>
