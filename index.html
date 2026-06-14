@@ -277,6 +277,18 @@
   .auth-btn.ghost{background:transparent; color:var(--dim); border-color:transparent;}
   .auth-btn:active{transform:scale(.98);}
   .auth-status{font-size:13px; color:var(--dim); min-height:18px;}
+
+  /* eventos: linhas condensadas + cabeçalho por grupo */
+  .group-header.ge-evt{padding:15px 2px 6px;}
+  .group-header.ge-evt:first-of-type{padding-top:4px;}
+  .fam{margin-bottom:9px;}
+  .fam-head{padding:7px 12px;}
+  .fam-name{font-size:14px;}
+  .member{padding:5px 12px; gap:8px;}
+  .member.is-vem .m-name, .member.is-nao .m-name{font-weight:600;}
+  .m-name{font-size:13.5px;}
+  .seg button{padding:4px 0; width:29px; font-size:12px;}
+  .fam-quick .qbtn{width:27px; height:27px;}
 </style>
 </head>
 <body>
@@ -455,6 +467,29 @@ function familiasParaDashboard(ev){
   if(_fichaGruposFiltro.size===0) return base;
   return base.filter(f=>(f.grupos||[]).some(id=>_fichaGruposFiltro.has(id)));
 }
+/* Ordem dos grupos: prioridade fixa primeiro, depois alfabético */
+const ORDEM_GRUPOS=['Família Direta','Família Lisboa','Família Braga'];
+function gruposOrdenados(){
+  const idx=g=>{const i=ORDEM_GRUPOS.indexOf(g.nome); return i<0?999:i;};
+  return [...appData.grupos].sort((a,b)=>{
+    const da=idx(a), db=idx(b);
+    if(da!==db) return da-db;
+    return a.nome.localeCompare(b.nome,'pt');
+  });
+}
+/* Agrupa uma lista de famílias por grupo (ordem prioritária), cada família uma só vez */
+function agruparFamilias(fams){
+  const shown=new Set(); const secs=[];
+  for(const g of gruposOrdenados()){
+    const fs=fams.filter(f=>!shown.has(f.id)&&(f.grupos||[]).includes(g.id))
+      .sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+    if(!fs.length) continue;
+    fs.forEach(f=>shown.add(f.id));
+    secs.push({grupo:g, fams:fs});
+  }
+  const orphans=fams.filter(f=>!shown.has(f.id)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+  return {secs, orphans};
+}
 function tallyFams(ev,fams){
   const r=ev.respostas||{};
   let vemA=0,vemC=0,naoA=0,naoC=0,pendA=0,pendC=0;
@@ -605,7 +640,7 @@ function famCardHTML(f){
 function renderPessoas(){
   const gruposBar=`<div class="section-lbl">Grupos</div>
     <div class="gwrap" style="margin-bottom:20px">
-      ${appData.grupos.map(g=>`<button type="button" class="gchip ro tap" style="--gc:${g.cor||'#7aa2f7'}" onclick="abrirGrupoDetalhe(${g.id})">${esc(g.nome)}</button>`).join('')}
+      ${gruposOrdenados().map(g=>`<button type="button" class="gchip ro tap" style="--gc:${g.cor||'#7aa2f7'}" onclick="abrirGrupoDetalhe(${g.id})">${esc(g.nome)}</button>`).join('')}
       <button type="button" class="add-m" onclick="abrirGrupo()">+ grupo</button>
     </div>`;
   if(!appData.familias.length){
@@ -615,17 +650,11 @@ function renderPessoas(){
       <button class="btn" onclick="abrirFamilia()">+ Nova família</button></div>`;
     return;
   }
-  let sections=''; const shown=new Set();
-  for(const g of appData.grupos){
-    const fams=appData.familias
-      .filter(f=>!shown.has(f.id)&&(f.grupos||[]).includes(g.id))
-      .sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
-    if(!fams.length) continue;
-    fams.forEach(f=>shown.add(f.id));
+  let sections=''; const {secs, orphans}=agruparFamilias(appData.familias);
+  for(const {grupo:g, fams} of secs){
     sections+=`<div class="group-header"><span class="gchip ro" style="--gc:${g.cor||'#7aa2f7'}">${esc(g.nome)}</span></div>`;
     sections+=fams.map(famCardHTML).join('');
   }
-  const orphans=appData.familias.filter(f=>!shown.has(f.id)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
   if(orphans.length){
     sections+=`<div class="section-lbl" style="margin-top:18px">Sem grupo</div>`;
     sections+=orphans.map(famCardHTML).join('');
@@ -715,7 +744,7 @@ function renderFicha(){
     : (filt.size>0?`Presenças — ${[...filt].map(id=>(grupoById(id)||{}).nome).filter(Boolean).join(', ')}`:'Presenças por família');
   const r=ev.respostas||{};
   const corDaFamilia=f=> f.id===appData.minhaFamiliaId ? 'var(--gold)' : (((f.grupos||[]).map(grupoById).find(Boolean)||{}).cor || '#7aa2f7');
-  const famBlocks = fams.map(f=>{
+  const famBloco=(f)=>{
     const isMinha=f.id===appData.minhaFamiliaId;
     const def=isMinha?'vem':'pend';
     let mem=sortedMembros(f.membros);
@@ -747,12 +776,23 @@ function renderFicha(){
       </div>
       ${membros||'<div class="member"><div class="m-name" style="color:var(--faint)">Sem membros</div></div>'}
     </div>`;
-  }).filter(Boolean);
-  const famHtml = famBlocks.length
-    ? famBlocks.join('')
-    : ((_fEstado||_fCat)
-        ? `<div class="empty" style="padding:30px 20px"><p>Ninguém para o filtro “${filtLbl||''}”.</p></div>`
-        : `<div class="empty" style="padding:30px 20px"><p>Nenhuma família nos grupos convidados. Ajusta os grupos do evento ou associa famílias a esses grupos em Pessoas.</p></div>`);
+  };
+  const {secs, orphans}=agruparFamilias(fams);
+  let famHtml='';
+  for(const {grupo:g, fams:fs} of secs){
+    const blocos=fs.map(famBloco).filter(Boolean).join('');
+    if(!blocos) continue;
+    famHtml+=`<div class="group-header ge-evt"><span class="gchip ro" style="--gc:${g.cor||'#7aa2f7'}">${esc(g.nome)}</span></div>${blocos}`;
+  }
+  if(orphans.length){
+    const blocos=orphans.map(famBloco).filter(Boolean).join('');
+    if(blocos) famHtml+=`<div class="group-header ge-evt"><span class="gchip ro neutral">Sem grupo</span></div>${blocos}`;
+  }
+  if(!famHtml){
+    famHtml=(_fEstado||_fCat)
+      ? `<div class="empty" style="padding:30px 20px"><p>Ninguém para o filtro “${filtLbl||''}”.</p></div>`
+      : `<div class="empty" style="padding:30px 20px"><p>Nenhuma família nos grupos convidados. Ajusta os grupos do evento ou associa famílias a esses grupos em Pessoas.</p></div>`;
+  }
 
   $('#view').innerHTML=`
     <button class="back" onclick="fecharFicha()">‹ Eventos</button>
