@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#15161f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Eventos">
+<title>GestãoEventos</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#15161f; --surface:#1e2030; --surface2:#262a3f; --border:#323650;
+    --text:#e9eaf3; --dim:#9aa0bd; --faint:#6b7195;
+    --gold:#e6b455; --gold-soft:#3a3320;
+    --vem:#5fd08a; --vem-soft:#1d3a2a;
+    --nao:#f0746a; --nao-soft:#3a2220;
+    --pend:#6b7195; --pend-soft:#262a3f;
+    --r:14px; --r-sm:10px;
+    --pad: max(env(safe-area-inset-bottom), 0px);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:Inter,system-ui,-apple-system,sans-serif;
+    font-size:15px; line-height:1.45; min-height:100vh;
+    -webkit-font-smoothing:antialiased; touch-action:manipulation;
+    -webkit-text-size-adjust:100%; text-size-adjust:100%;
+  }
+  h1,h2,h3{margin:0; font-family:Fraunces,Georgia,serif; font-weight:600; letter-spacing:-0.01em;}
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+  input,select,textarea{font-family:inherit; font-size:16px;}
+  ::selection{background:var(--gold); color:#15161f;}
+
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(21,22,31,.86); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+    padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  }
+  .hrow{display:flex; align-items:center; gap:10px; max-width:760px; margin:0 auto;}
+  .brand{display:flex; align-items:baseline; gap:8px; font-family:Fraunces,serif; font-size:21px; font-weight:600;}
+  .brand .dot{color:var(--gold);}
+  .hspace{flex:1;}
+  .icon-btn{
+    width:38px; height:38px; border-radius:11px; display:grid; place-items:center;
+    background:var(--surface); border:1px solid var(--border); font-size:17px;
+    transition:background .15s, border-color .15s;
+  }
+  .icon-btn:hover{background:var(--surface2);}
+  .lock{
+    max-width:760px; margin:8px auto 0; display:flex; align-items:center; gap:8px;
+    font-size:12.5px; color:var(--gold); background:var(--gold-soft);
+    border:1px solid #4a3f23; border-radius:9px; padding:7px 11px;
+  }
+
+  nav.tabs{
+    max-width:760px; margin:0 auto; padding:14px 16px 0; display:flex; gap:6px;
+  }
+  .tab{
+    flex:1; padding:9px 0; border-radius:10px; font-size:13.5px; font-weight:600;
+    color:var(--dim); background:transparent; border:1px solid transparent; transition:all .15s;
+  }
+  .tab.active{color:var(--text); background:var(--surface); border-color:var(--border);}
+
+  main{max-width:760px; margin:0 auto; padding:16px 16px 120px;}
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    padding:15px 16px; margin-bottom:11px; transition:border-color .15s, transform .08s;
+  }
+  .card.tap:active{transform:scale(.992);}
+  .ev-top{display:flex; align-items:center; gap:11px;}
+  .ev-emoji{
+    width:42px; height:42px; flex:none; border-radius:11px; display:grid; place-items:center;
+    font-size:20px; background:var(--surface2); border:1px solid var(--border);
+  }
+  .ev-name{font-family:Fraunces,serif; font-size:18px; font-weight:600; line-height:1.2;}
+  .ev-meta{font-size:12.5px; color:var(--dim); margin-top:2px;}
+  .ev-tally{display:flex; gap:14px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border);}
+  .tly{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--dim);}
+  .tly b{font-family:Inter; font-weight:700; font-variant-numeric:tabular-nums; font-size:15px;}
+  .pip{width:8px; height:8px; border-radius:50%; flex:none;}
+  .pip.v{background:var(--vem);} .pip.n{background:var(--nao);} .pip.p{background:var(--pend);}
+
+  .back{display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--dim); padding:8px 0;}
+  .ficha-head{display:flex; align-items:flex-start; gap:12px; margin:4px 0 6px;}
+  .ficha-head .ev-emoji{width:50px; height:50px; font-size:24px;}
+  .ficha-title{flex:1; min-width:0;}
+  .ficha-title h1{font-size:25px; line-height:1.12;}
+  .ficha-title .ev-meta{margin-top:5px; font-size:13px;}
+  .ficha-actions{display:flex; gap:7px;}
+  .mini-btn{width:34px; height:34px; border-radius:9px; background:var(--surface); border:1px solid var(--border); display:grid; place-items:center; font-size:15px;}
+
+  .dash{
+    background:linear-gradient(160deg,var(--surface2),var(--surface));
+    border:1px solid var(--border); border-radius:var(--r);
+    padding:18px; margin:12px 0 18px; display:flex; gap:18px; align-items:center;
+  }
+  .donut-wrap{position:relative; width:128px; height:128px; flex:none;}
+  .donut-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;}
+  .donut-center .num{font-family:Fraunces,serif; font-size:40px; font-weight:600; line-height:1; color:var(--gold);}
+  .donut-center .lbl{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-top:3px;}
+  .dash-stats{flex:1; min-width:0; display:flex; flex-direction:column; gap:9px;}
+  .stat{display:flex; align-items:center; gap:9px; font-size:13.5px;}
+  .stat .pip{width:9px; height:9px;}
+  .stat .stxt{flex:1; color:var(--dim);}
+  .stat .sval{font-weight:700; font-variant-numeric:tabular-nums; font-size:15px;}
+  .ac-split{display:flex; gap:9px; margin-top:3px;}
+  .ac-chip{flex:1; background:var(--vem-soft); border:1px solid #285c41; border-radius:10px; padding:8px 10px; text-align:center;}
+  .ac-chip .n{font-family:Fraunces,serif; font-size:21px; font-weight:600; color:var(--vem);}
+  .ac-chip .t{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--dim); margin-top:1px;}
+
+  .fam{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); margin-bottom:11px; overflow:hidden;}
+  .fam-head{display:flex; align-items:center; gap:10px; padding:13px 14px; border-bottom:1px solid var(--border);}
+  .fam-name{flex:1; font-weight:600; font-size:15px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .fam-quick{display:flex; gap:5px; flex:none;}
+  .qbtn{width:30px; height:30px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); display:grid; place-items:center; font-size:13px; font-weight:700;}
+  .qbtn.v{color:var(--vem);} .qbtn.n{color:var(--nao);} .qbtn.p{color:var(--faint);}
+  .qbtn:active{transform:scale(.9);}
+  .member{display:flex; align-items:center; gap:11px; padding:11px 14px;}
+  .member + .member{border-top:1px solid #2a2e44;}
+  .m-name{flex:1; min-width:0; font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .m-name .kid{font-size:11px; color:var(--faint); margin-left:6px; vertical-align:1px;}
+  .seg{display:flex; background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:2px; flex:none;}
+  .seg button{padding:5px 0; width:34px; border-radius:7px; font-size:13px; font-weight:700; color:var(--faint); transition:all .12s;}
+  .seg button.on.v{background:var(--vem-soft); color:var(--vem);}
+  .seg button.on.n{background:var(--nao-soft); color:var(--nao);}
+  .seg button.on.p{background:var(--pend-soft); color:var(--dim);}
+
+  .fam-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:14px 15px; margin-bottom:11px;}
+  .fam-card-head{display:flex; align-items:center; gap:10px; margin-bottom:2px;}
+  .fam-card-head h3{font-size:16px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .mlist{display:flex; flex-wrap:wrap; gap:7px; margin-top:11px;}
+  .mtag{display:inline-flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border); border-radius:99px; padding:5px 11px 5px 12px; font-size:13px;}
+  .mtag .x{color:var(--faint); font-weight:700; padding:0 2px;}
+  .mtag.kid{border-style:dashed;}
+  .add-m{display:inline-flex; align-items:center; gap:5px; background:transparent; border:1px dashed var(--border); border-radius:99px; padding:5px 12px; font-size:13px; color:var(--gold); font-weight:600;}
+
+  /* grupos */
+  .gwrap{display:flex; flex-wrap:wrap; gap:7px; align-items:center;}
+  .gchip{display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:99px; font-size:12.5px; font-weight:600; color:var(--gc,#7aa2f7); background:transparent; border:1px solid var(--gc,#7aa2f7); opacity:.5; transition:opacity .12s, background .12s, transform .08s;}
+  .gchip.on{opacity:1; background:color-mix(in srgb, var(--gc,#7aa2f7) 16%, transparent);}
+  .gchip.ro{opacity:1; padding:4px 11px; font-size:11.5px; background:color-mix(in srgb, var(--gc,#7aa2f7) 14%, transparent);}
+  .gchip.ro.tap:active{transform:scale(.94);}
+  .gchip.neutral{--gc:#6b7195;}
+  .swatches{display:flex; gap:9px; flex-wrap:wrap;}
+  .swatch{width:36px; height:36px; border-radius:10px; border:2px solid transparent;}
+  .swatch.on{border-color:#fff;}
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 16px; border-radius:11px; font-weight:600; font-size:14.5px; background:var(--gold); color:#15161f; border:1px solid var(--gold);}
+  .btn.ghost{background:transparent; color:var(--text); border-color:var(--border);}
+  .btn.danger{background:transparent; color:var(--nao); border-color:#5a2a26;}
+  .btn:active{transform:scale(.98);}
+  .empty{text-align:center; padding:54px 22px; color:var(--dim);}
+  .empty .big{font-size:42px; margin-bottom:10px;}
+  .empty h2{font-size:20px; color:var(--text); margin-bottom:6px;}
+  .empty p{font-size:14px; margin:0 0 18px; line-height:1.5;}
+  .section-lbl{font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); font-weight:600; margin:4px 2px 12px;}
+
+  .fab{
+    position:fixed; right:18px; bottom:calc(18px + var(--pad)); z-index:45;
+    width:56px; height:56px; border-radius:18px; background:var(--gold); color:#15161f;
+    font-size:28px; font-weight:600; display:grid; place-items:center;
+    box-shadow:0 8px 24px rgba(0,0,0,.4), 0 0 0 1px rgba(230,180,85,.3);
+  }
+  .fab:active{transform:scale(.94);}
+
+  .scrim{position:fixed; inset:0; z-index:60; background:rgba(8,9,14,.6); backdrop-filter:blur(2px); display:none; align-items:flex-end; justify-content:center;}
+  .scrim.open{display:flex;}
+  .sheet{
+    width:100%; max-width:760px; background:var(--surface); border:1px solid var(--border);
+    border-radius:20px 20px 0 0; padding:18px 18px calc(20px + var(--pad));
+    max-height:90vh; overflow-y:auto; animation:rise .2s ease;
+  }
+  @keyframes rise{from{transform:translateY(14px); opacity:.6;} to{transform:none; opacity:1;}}
+  .grip{width:38px; height:4px; border-radius:2px; background:var(--border); margin:0 auto 14px;}
+  .sheet h2{font-size:20px; margin-bottom:16px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12.5px; color:var(--dim); margin-bottom:6px; font-weight:500;}
+  .field input, .field select, .field textarea{
+    width:100%; padding:11px 13px; background:var(--bg); border:1px solid var(--border);
+    border-radius:11px; color:var(--text); -webkit-appearance:none; appearance:none;
+    min-width:0; max-width:100%; box-sizing:border-box;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--gold); outline-offset:0;}
+  .field textarea{resize:vertical; min-height:60px;}
+  .row2{display:flex; gap:10px;}
+  .row2 > *{flex:1; min-width:0;}
+  .typegrid{display:grid; grid-template-columns:repeat(5,1fr); gap:7px;}
+  .typeopt{padding:10px 0; border-radius:11px; background:var(--bg); border:1px solid var(--border); text-align:center; font-size:11px; color:var(--dim);}
+  .typeopt .e{font-size:20px; display:block; margin-bottom:3px;}
+  .typeopt.on{border-color:var(--gold); background:var(--gold-soft); color:var(--text);}
+  .toggle2{display:flex; background:var(--bg); border:1px solid var(--border); border-radius:11px; padding:3px;}
+  .toggle2 button{flex:1; padding:9px 0; border-radius:8px; font-size:13.5px; font-weight:600; color:var(--dim);}
+  .toggle2 button.on{background:var(--surface2); color:var(--text);}
+  .sheet-actions{display:flex; gap:10px; margin-top:6px;}
+  .sheet-actions .btn{flex:1;}
+  .hint{font-size:12px; color:var(--faint); margin-top:8px; line-height:1.5;}
+
+  #toast{
+    position:fixed; left:50%; bottom:calc(26px + var(--pad)); transform:translateX(-50%) translateY(20px);
+    background:var(--surface2); border:1px solid var(--border); color:var(--text);
+    padding:11px 18px; border-radius:12px; font-size:13.5px; z-index:80; opacity:0;
+    transition:opacity .2s, transform .2s; pointer-events:none; box-shadow:0 6px 20px rgba(0,0,0,.4); max-width:90vw;
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <div class="brand">Gestão<span class="dot">·</span>Eventos</div>
+    <div class="hspace"></div>
+    <button class="icon-btn" id="btnReload" title="Sincronizar">↻</button>
+    <button class="icon-btn" id="btnSettings" title="Definições">⚙</button>
+  </div>
+  <div class="lock" id="lockBanner" style="display:none">🔒 Modo leitura — configura o token nas definições para gravar.</div>
+</header>
+
+<nav class="tabs" id="tabsBar">
+  <button class="tab active" data-tab="eventos">Eventos</button>
+  <button class="tab" data-tab="pessoas">Pessoas</button>
+</nav>
+
+<main id="view"></main>
+
+<button class="fab" id="fab">+</button>
+
+<div class="scrim" id="scrim"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+
+<script>
+/* =========================================================================
+   GestãoEventos — single-file. Dados em GitHub: AppDataJSON/gestaoeventos-data.json
+   Sync igual ao Expenses-Acc/SplitBill: leitura Contents API autenticada (SHA),
+   escrita serializada (_writeChain) + _writePending a travar o auto-reload,
+   ge_dirty a travar o auto-pull, token em localStorage SEMPRE fora dos dados.
+   ========================================================================= */
+
+const OWNER='diogoandrefsilva-ghc', DATA_REPO='AppDataJSON', PATH='gestaoeventos-data.json', BRANCH='main';
+const API_URL=`https://api.github.com/repos/${OWNER}/${DATA_REPO}/contents/${PATH}`;
+const RAW_URL=`https://raw.githubusercontent.com/${OWNER}/${DATA_REPO}/${BRANCH}/${PATH}`;
+const TOKEN_KEY='ge_gh_token';
+
+const TIPOS={
+  almoco:{e:'🍴',l:'Almoço'}, jantar:{e:'🍷',l:'Jantar'},
+  aniversario:{e:'🎂',l:'Aniversário'}, festa:{e:'🎉',l:'Festa'}, outro:{e:'📅',l:'Outro'}
+};
+const GRUPO_CORES=['#7aa2f7','#bb9af7','#4cc9d6','#e6b455','#e0935a','#c678dd','#5fd08a','#f7768e'];
+
+let appData={grupos:[], familias:[], eventos:[], _meta:{ng:1,nf:1,np:1,ne:1}};
+let fileSha=null;
+let TOKEN=localStorage.getItem(TOKEN_KEY)||'';
+let currentTab='eventos', currentEventId=null, donutChart=null;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(m){const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);}
+function b64enc(str){return btoa(unescape(encodeURIComponent(str)));}
+function b64dec(b64){return decodeURIComponent(escape(atob(b64.replace(/\s/g,''))));}
+function ensureMeta(){
+  appData.grupos=appData.grupos||[]; appData.familias=appData.familias||[]; appData.eventos=appData.eventos||[];
+  appData._meta=appData._meta||{}; const m=appData._meta;
+  const max=(arr,f)=>arr.reduce((a,x)=>Math.max(a,f(x)||0),0);
+  if(!m.ng) m.ng=max(appData.grupos,g=>g.id)+1;
+  if(!m.nf) m.nf=max(appData.familias,f=>f.id)+1;
+  if(!m.np){let mx=0; appData.familias.forEach(f=>(f.membros||[]).forEach(p=>mx=Math.max(mx,p.id||0))); m.np=mx+1;}
+  if(!m.ne) m.ne=max(appData.eventos,e=>e.id)+1;
+}
+const newGrupoId=()=>appData._meta.ng++;
+const newFamId=()=>appData._meta.nf++;
+const newPesId=()=>appData._meta.np++;
+const newEvId=()=>appData._meta.ne++;
+function fmtData(iso){
+  if(!iso) return 'Sem data';
+  const [y,mo,d]=iso.split('-').map(Number);
+  const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return `${d} ${meses[mo-1]} ${y}`;
+}
+const grupoById=id=>appData.grupos.find(g=>g.id===id);
+function familiasDoEvento(ev){
+  const g=ev.grupos||[];
+  if(!g.length) return appData.familias;
+  return appData.familias.filter(f=>(f.grupos||[]).some(id=>g.includes(id)));
+}
+function tally(ev){
+  const r=ev.respostas||{};
+  let vemA=0,vemC=0,naoA=0,naoC=0,pendA=0,pendC=0;
+  familiasDoEvento(ev).forEach(f=>(f.membros||[]).forEach(p=>{
+    const st=r[p.id]; const kid=p.tipo==='crianca';
+    if(st==='vem'){kid?vemC++:vemA++;}
+    else if(st==='nao'){kid?naoC++:naoA++;}
+    else{kid?pendC++:pendA++;}
+  }));
+  return {vemA,vemC,naoA,naoC,pendA,pendC, vem:vemA+vemC, nao:naoA+naoC, pend:pendA+pendC};
+}
+
+/* ---------- chips de grupo ---------- */
+function gchipToggle(g,on,onclick){return `<button type="button" class="gchip${on?' on':''}" style="--gc:${g.cor||'#7aa2f7'}" onclick="${onclick}">${esc(g.nome)}</button>`;}
+function gchipRO(g,extra){return `<span class="gchip ro ${extra||''}" style="--gc:${g.cor||'#7aa2f7'}">${esc(g.nome)}</span>`;}
+
+/* =========================================================================
+   SYNC GITHUB
+   ========================================================================= */
+async function carregar(silent){
+  try{
+    let parsed=null, sha=null;
+    if(TOKEN){
+      const r=await fetch(`${API_URL}?ref=${BRANCH}&t=${Date.now()}`,
+        {headers:{'Authorization':'token '+TOKEN,'Accept':'application/vnd.github+json'}});
+      if(r.ok){const d=await r.json(); sha=d.sha; parsed=JSON.parse(b64dec(d.content));}
+      else if(r.status===401){toast('Token inválido — modo leitura'); TOKEN=''; localStorage.removeItem(TOKEN_KEY);}
+    }
+    if(parsed===null){
+      const r=await fetch(`${RAW_URL}?t=${Date.now()}`);
+      if(r.ok){parsed=await r.json();}
+      else if(r.status===404){parsed={grupos:[],familias:[],eventos:[],_meta:{ng:1,nf:1,np:1,ne:1}};}
+      else throw new Error('HTTP '+r.status);
+    }
+    appData=parsed||{grupos:[],familias:[],eventos:[],_meta:{}};
+    fileSha=sha; ensureMeta(); render();
+    if(!silent) toast('Sincronizado');
+  }catch(e){
+    console.error(e);
+    if(!silent) toast('Não consegui ler os dados');
+    ensureMeta(); render();
+  }
+}
+
+let _writeChain=Promise.resolve(), _writePending=0, ge_dirty=false, _saveTimer=null;
+function scheduleSave(msg){
+  ge_dirty=true; clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{ ge_dirty=false; pushToGitHub(msg); }, 1100);
+}
+function pushToGitHub(msg){
+  if(!TOKEN){toast('Configura o token para gravar'); return Promise.resolve(false);}
+  _writePending++;
+  _writeChain=_writeChain.then(()=>_doPush(msg)).catch(e=>{console.error(e);return false;})
+    .finally(()=>{_writePending=Math.max(0,_writePending-1);});
+  return _writeChain;
+}
+async function _doPush(msg){
+  const content=b64enc(JSON.stringify(appData,null,2));
+  const body={message:msg||('GestãoEventos '+new Date().toISOString()),content,branch:BRANCH};
+  if(fileSha) body.sha=fileSha;
+  const hdr={'Authorization':'token '+TOKEN,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
+  let r=await fetch(API_URL,{method:'PUT',headers:hdr,body:JSON.stringify(body)});
+  if(r.status===409){
+    const g=await fetch(`${API_URL}?ref=${BRANCH}&t=${Date.now()}`,{headers:hdr});
+    if(g.ok){const gd=await g.json(); body.sha=gd.sha; r=await fetch(API_URL,{method:'PUT',headers:hdr,body:JSON.stringify(body)});}
+  }
+  if(r.ok){const d=await r.json(); fileSha=d.content.sha; return true;}
+  const err=await r.json().catch(()=>({})); toast('Erro ao gravar ('+r.status+')'); console.error(err); return false;
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && _writePending===0 && !ge_dirty) carregar(true);
+});
+
+/* =========================================================================
+   RENDER
+   ========================================================================= */
+function render(){
+  $('#lockBanner').style.display=TOKEN?'none':'flex';
+  $('#tabsBar').style.display=currentEventId?'none':'flex';
+  $('#fab').style.display=currentEventId?'none':'grid';
+  if(currentEventId) return renderFicha();
+  if(currentTab==='eventos') return renderEventos();
+  return renderPessoas();
+}
+
+function renderEventos(){
+  const evs=[...appData.eventos].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  if(!evs.length){
+    $('#view').innerHTML=`<div class="empty"><div class="big">🗓️</div>
+      <h2>Ainda sem eventos</h2>
+      <p>Cria o teu primeiro almoço, jantar ou festa e escolhe que grupos convidar.</p>
+      <button class="btn" onclick="abrirEvento()">+ Novo evento</button></div>`;
+    return;
+  }
+  $('#view').innerHTML=evs.map(ev=>{
+    const t=tally(ev); const tp=TIPOS[ev.tipo]||TIPOS.outro;
+    const meta=[fmtData(ev.data), ev.hora||'', ev.local||''].filter(Boolean).join(' · ');
+    const gconv=(ev.grupos||[]).map(grupoById).filter(Boolean);
+    const gline=gconv.length?`<div class="gwrap" style="margin-top:10px">${gconv.map(g=>gchipRO(g)).join('')}</div>`:'';
+    return `<div class="card tap" onclick="abrirFicha(${ev.id})">
+      <div class="ev-top">
+        <div class="ev-emoji">${tp.e}</div>
+        <div style="flex:1;min-width:0">
+          <div class="ev-name">${esc(ev.nome)}</div>
+          <div class="ev-meta">${esc(meta)}</div>
+        </div>
+      </div>
+      ${gline}
+      <div class="ev-tally">
+        <span class="tly"><i class="pip v"></i><b>${t.vem}</b> vêm</span>
+        <span class="tly"><i class="pip n"></i><b>${t.nao}</b> não</span>
+        <span class="tly"><i class="pip p"></i><b>${t.pend}</b> por responder</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPessoas(){
+  const gruposBar=`<div class="section-lbl">Grupos</div>
+    <div class="gwrap" style="margin-bottom:20px">
+      ${appData.grupos.map(g=>`<button type="button" class="gchip ro tap" style="--gc:${g.cor||'#7aa2f7'}" onclick="abrirGrupo(${g.id})">${esc(g.nome)}</button>`).join('')}
+      <button type="button" class="add-m" onclick="abrirGrupo()">+ grupo</button>
+    </div>`;
+
+  if(!appData.familias.length){
+    $('#view').innerHTML=gruposBar+`<div class="empty"><div class="big">👪</div>
+      <h2>Sem famílias</h2>
+      <p>Adiciona as famílias e os seus membros (adultos e crianças), e associa-as a grupos.</p>
+      <button class="btn" onclick="abrirFamilia()">+ Nova família</button></div>`;
+    return;
+  }
+  const cards=appData.familias.map(f=>{
+    const fg=(f.grupos||[]).map(grupoById).filter(Boolean);
+    const fgLine=fg.length?`<div class="gwrap" style="margin-top:9px">${fg.map(g=>gchipRO(g)).join('')}</div>`:'';
+    const membros=(f.membros||[]).map(p=>`
+      <span class="mtag ${p.tipo==='crianca'?'kid':''}">${esc(p.nome)}${p.tipo==='crianca'?' <span style="color:var(--faint);font-size:11px">criança</span>':''}
+        <button class="x" onclick="removerMembro(${f.id},${p.id})" title="Remover">×</button></span>`).join('');
+    return `<div class="fam-card">
+      <div class="fam-card-head">
+        <h3>${esc(f.nome)}</h3>
+        <button class="mini-btn" onclick="abrirFamilia(${f.id})" title="Editar">✎</button>
+        <button class="mini-btn" onclick="removerFamilia(${f.id})" title="Apagar">🗑</button>
+      </div>
+      ${fgLine}
+      <div class="mlist">${membros}<button class="add-m" onclick="abrirMembro(${f.id})">+ membro</button></div>
+    </div>`;
+  }).join('');
+  $('#view').innerHTML=gruposBar+`<div class="section-lbl">${appData.familias.length} família(s)</div>${cards}`;
+}
+
+function renderFicha(){
+  const ev=appData.eventos.find(e=>e.id===currentEventId);
+  if(!ev){currentEventId=null; return render();}
+  const t=tally(ev); const tp=TIPOS[ev.tipo]||TIPOS.outro;
+  const meta=[fmtData(ev.data), ev.hora||'', ev.local||''].filter(Boolean).join(' · ');
+  const gconv=(ev.grupos||[]).map(grupoById).filter(Boolean);
+  const gline = gconv.length
+    ? `<div class="gwrap" style="margin:2px 0 4px">${gconv.map(g=>gchipRO(g)).join('')}</div>`
+    : `<div class="gwrap" style="margin:2px 0 4px"><span class="gchip ro neutral">Todas as famílias</span></div>`;
+
+  const fams=familiasDoEvento(ev);
+  const r=ev.respostas||{};
+  const famHtml = fams.length ? fams.map(f=>{
+    const membros=(f.membros||[]).map(p=>{
+      const st=r[p.id]||'pend';
+      return `<div class="member">
+        <div class="m-name">${esc(p.nome)}${p.tipo==='crianca'?'<span class="kid">criança</span>':''}</div>
+        <div class="seg">
+          <button class="${st==='vem'?'on v':''}" onclick="setPresenca(${p.id},'vem')">✓</button>
+          <button class="${st==='nao'?'on n':''}" onclick="setPresenca(${p.id},'nao')">✗</button>
+          <button class="${st==='pend'?'on p':''}" onclick="setPresenca(${p.id},'pend')">–</button>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="fam">
+      <div class="fam-head">
+        <div class="fam-name">${esc(f.nome)}</div>
+        <div class="fam-quick">
+          <button class="qbtn v" onclick="setFamilia(${f.id},'vem')" title="Todos vêm">✓</button>
+          <button class="qbtn n" onclick="setFamilia(${f.id},'nao')" title="Todos não">✗</button>
+          <button class="qbtn p" onclick="setFamilia(${f.id},'pend')" title="Limpar">–</button>
+        </div>
+      </div>
+      ${membros||'<div class="member"><div class="m-name" style="color:var(--faint)">Sem membros</div></div>'}
+    </div>`;
+  }).join('') : `<div class="empty" style="padding:30px 20px"><p>Nenhuma família nos grupos convidados. Ajusta os grupos do evento ou associa famílias a esses grupos em Pessoas.</p></div>`;
+
+  $('#view').innerHTML=`
+    <button class="back" onclick="fecharFicha()">‹ Eventos</button>
+    <div class="ficha-head">
+      <div class="ev-emoji">${tp.e}</div>
+      <div class="ficha-title">
+        <h1>${esc(ev.nome)}</h1>
+        <div class="ev-meta">${esc(meta)}</div>
+      </div>
+      <div class="ficha-actions">
+        <button class="mini-btn" onclick="abrirEvento(${ev.id})" title="Editar">✎</button>
+        <button class="mini-btn" onclick="removerEvento(${ev.id})" title="Apagar">🗑</button>
+      </div>
+    </div>
+    ${gline}
+    <div class="dash">
+      <div class="donut-wrap">
+        <canvas id="donut" width="128" height="128"></canvas>
+        <div class="donut-center"><div class="num">${t.vem}</div><div class="lbl">presenças</div></div>
+      </div>
+      <div class="dash-stats">
+        <div class="stat"><i class="pip v"></i><span class="stxt">Vêm</span><span class="sval">${t.vem}</span></div>
+        <div class="stat"><i class="pip n"></i><span class="stxt">Não vêm</span><span class="sval">${t.nao}</span></div>
+        <div class="stat"><i class="pip p"></i><span class="stxt">Por responder</span><span class="sval">${t.pend}</span></div>
+        <div class="ac-split">
+          <div class="ac-chip"><div class="n">${t.vemA}</div><div class="t">Adultos</div></div>
+          <div class="ac-chip"><div class="n">${t.vemC}</div><div class="t">Crianças</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="section-lbl">Presenças por família</div>
+    ${famHtml}`;
+  drawDonut(t);
+}
+
+function drawDonut(t){
+  const cv=$('#donut'); if(!cv) return;
+  if(donutChart) donutChart.destroy();
+  const data=[t.vem,t.nao,t.pend];
+  const css=getComputedStyle(document.documentElement);
+  if(data.every(v=>v===0)) data[2]=1;
+  donutChart=new Chart(cv,{type:'doughnut',data:{
+    labels:['Vêm','Não vêm','Por responder'],
+    datasets:[{data, backgroundColor:[css.getPropertyValue('--vem').trim(),css.getPropertyValue('--nao').trim(),'#3a3f5c'], borderColor:css.getPropertyValue('--surface').trim(), borderWidth:2}]
+  },options:{cutout:'72%', plugins:{legend:{display:false},tooltip:{enabled:true}}, animation:{duration:350}}});
+}
+
+/* =========================================================================
+   PRESENÇAS
+   ========================================================================= */
+function setPresenca(pid,st){
+  const ev=appData.eventos.find(e=>e.id===currentEventId); if(!ev) return;
+  ev.respostas=ev.respostas||{};
+  if(st==='pend') delete ev.respostas[pid]; else ev.respostas[pid]=st;
+  renderFicha(); scheduleSave('Presença atualizada: '+ev.nome);
+}
+function setFamilia(fid,st){
+  const ev=appData.eventos.find(e=>e.id===currentEventId); if(!ev) return;
+  const f=appData.familias.find(x=>x.id===fid); if(!f) return;
+  ev.respostas=ev.respostas||{};
+  (f.membros||[]).forEach(p=>{ if(st==='pend') delete ev.respostas[p.id]; else ev.respostas[p.id]=st; });
+  renderFicha(); scheduleSave('Família '+f.nome+' atualizada: '+ev.nome);
+}
+
+/* =========================================================================
+   NAVEGAÇÃO
+   ========================================================================= */
+function abrirFicha(id){currentEventId=id; window.scrollTo(0,0); render();}
+function fecharFicha(){currentEventId=null; window.scrollTo(0,0); render();}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  currentTab=b.dataset.tab; currentEventId=null;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
+  render();
+});
+$('#fab').onclick=()=>{ currentTab==='eventos'?abrirEvento():abrirFamilia(); };
+$('#btnReload').onclick=()=>carregar(false);
+
+/* =========================================================================
+   MODAIS
+   ========================================================================= */
+function openSheet(html){$('#sheet').innerHTML='<div class="grip"></div>'+html; $('#scrim').classList.add('open');}
+function closeSheet(){$('#scrim').classList.remove('open');}
+$('#scrim').onclick=e=>{ if(e.target===$('#scrim')) closeSheet(); };
+
+/* ---- Grupo ---- */
+let _grupoCor=GRUPO_CORES[0];
+function abrirGrupo(id){
+  const g=id?grupoById(id):null;
+  _grupoCor=g?g.cor:GRUPO_CORES[appData.grupos.length%GRUPO_CORES.length];
+  const swatches=GRUPO_CORES.map(c=>`<button type="button" class="swatch${c===_grupoCor?' on':''}" data-c="${c}" style="background:${c}" onclick="selGrupoCor('${c}')"></button>`).join('');
+  openSheet(`<h2>${g?'Editar grupo':'Novo grupo'}</h2>
+    <div class="field"><label>Nome</label><input id="gNome" placeholder="Ex.: Amigos de Lisboa" value="${g?esc(g.nome):''}"></div>
+    <div class="field"><label>Cor</label><div class="swatches" id="gSwatches">${swatches}</div></div>
+    <div class="sheet-actions">
+      ${g?`<button class="btn danger" onclick="removerGrupo(${id})">Apagar</button>`:`<button class="btn ghost" onclick="closeSheet()">Cancelar</button>`}
+      <button class="btn" onclick="guardarGrupo(${id||0})">${g?'Guardar':'Criar'}</button>
+    </div>`);
+  setTimeout(()=>$('#gNome')&&$('#gNome').focus(),60);
+}
+function selGrupoCor(c){_grupoCor=c; document.querySelectorAll('#gSwatches .swatch').forEach(b=>b.classList.toggle('on',b.dataset.c===c));}
+function guardarGrupo(id){
+  const nome=$('#gNome').value.trim(); if(!nome){toast('Dá um nome ao grupo'); return;}
+  if(id){const g=grupoById(id); g.nome=nome; g.cor=_grupoCor;}
+  else{appData.grupos.push({id:newGrupoId(), nome, cor:_grupoCor});}
+  closeSheet(); render(); scheduleSave('Grupo: '+nome);
+}
+function removerGrupo(id){
+  const g=grupoById(id); if(!g) return;
+  if(!confirm(`Apagar o grupo "${g.nome}"? As famílias deixam de o ter e os eventos deixam de o convidar.`)) return;
+  appData.grupos=appData.grupos.filter(x=>x.id!==id);
+  appData.familias.forEach(f=>{ if(f.grupos) f.grupos=f.grupos.filter(x=>x!==id); });
+  appData.eventos.forEach(e=>{ if(e.grupos) e.grupos=e.grupos.filter(x=>x!==id); });
+  closeSheet(); render(); scheduleSave('Grupo removido');
+}
+
+/* ---- Evento ---- */
+let _evTipo='almoco', _evGrupos=new Set();
+function abrirEvento(id){
+  const ev=id?appData.eventos.find(e=>e.id===id):null;
+  _evTipo=ev?ev.tipo:'almoco';
+  _evGrupos=new Set(ev?(ev.grupos||[]):[]);
+  const tg=Object.entries(TIPOS).map(([k,v])=>`<button type="button" class="typeopt ${k===_evTipo?'on':''}" data-tipo="${k}" onclick="selTipo('${k}')"><span class="e">${v.e}</span>${v.l}</button>`).join('');
+  const gchips=appData.grupos.length?appData.grupos.map(g=>gchipToggle(g,_evGrupos.has(g.id),`toggleEvGrupo(${g.id})`)).join(''):'<span class="hint" style="margin:0">Sem grupos criados — cria-os no separador Pessoas.</span>';
+  openSheet(`<h2>${ev?'Editar evento':'Novo evento'}</h2>
+    <div class="field"><label>Nome</label><input id="evNome" placeholder="Ex.: Aniversário da Maria" value="${ev?esc(ev.nome):''}"></div>
+    <div class="field"><label>Tipo</label><div class="typegrid" id="evTipos">${tg}</div></div>
+    <div class="field row2">
+      <div><label>Data</label><input type="date" id="evData" value="${ev?esc(ev.data||''):''}"></div>
+      <div><label>Hora</label><input type="time" id="evHora" value="${ev?esc(ev.hora||''):''}"></div>
+    </div>
+    <div class="field"><label>Local</label><input id="evLocal" placeholder="Restaurante, casa, ..." value="${ev?esc(ev.local||''):''}"></div>
+    <div class="field"><label>Convidar grupos</label><div class="gwrap" id="evGruposWrap">${gchips}</div>
+      <p class="hint">Sem grupos selecionados = convite a todas as famílias.</p></div>
+    <div class="field"><label>Notas</label><textarea id="evNotas" placeholder="Opcional">${ev?esc(ev.notas||''):''}</textarea></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="closeSheet()">Cancelar</button>
+      <button class="btn" onclick="guardarEvento(${id||0})">${ev?'Guardar':'Criar'}</button>
+    </div>`);
+  setTimeout(()=>$('#evNome')&&$('#evNome').focus(),60);
+}
+function selTipo(k){_evTipo=k; document.querySelectorAll('#evTipos .typeopt').forEach(b=>b.classList.toggle('on',b.dataset.tipo===k));}
+function toggleEvGrupo(id){ _evGrupos.has(id)?_evGrupos.delete(id):_evGrupos.add(id);
+  const w=$('#evGruposWrap'); if(w) w.innerHTML=appData.grupos.map(g=>gchipToggle(g,_evGrupos.has(g.id),`toggleEvGrupo(${g.id})`)).join('');}
+function guardarEvento(id){
+  const nome=$('#evNome').value.trim(); if(!nome){toast('Dá um nome ao evento'); return;}
+  const dados={nome, tipo:_evTipo, data:$('#evData').value, hora:$('#evHora').value, local:$('#evLocal').value.trim(), notas:$('#evNotas').value.trim(), grupos:[..._evGrupos]};
+  if(id){Object.assign(appData.eventos.find(e=>e.id===id), dados);}
+  else{const ev={id:newEvId(), ...dados, respostas:{}}; appData.eventos.push(ev); currentEventId=ev.id;}
+  closeSheet(); render(); scheduleSave('Evento: '+nome);
+}
+function removerEvento(id){
+  const ev=appData.eventos.find(e=>e.id===id); if(!ev) return;
+  if(!confirm(`Apagar o evento "${ev.nome}"?`)) return;
+  appData.eventos=appData.eventos.filter(e=>e.id!==id); currentEventId=null;
+  render(); scheduleSave('Evento removido');
+}
+
+/* ---- Família ---- */
+let _famGrupos=new Set();
+function abrirFamilia(id){
+  const f=id?appData.familias.find(x=>x.id===id):null;
+  _famGrupos=new Set(f?(f.grupos||[]):[]);
+  const gchips=appData.grupos.length?appData.grupos.map(g=>gchipToggle(g,_famGrupos.has(g.id),`toggleFamGrupo(${g.id})`)).join(''):'<span class="hint" style="margin:0">Sem grupos criados ainda.</span>';
+  openSheet(`<h2>${f?'Editar família':'Nova família'}</h2>
+    <div class="field"><label>Nome da família / casal</label><input id="famNome" placeholder="Ex.: Família Silva" value="${f?esc(f.nome):''}"></div>
+    <div class="field"><label>Grupos</label><div class="gwrap" id="famGruposWrap">${gchips}</div></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="closeSheet()">Cancelar</button>
+      <button class="btn" onclick="guardarFamilia(${id||0})">${f?'Guardar':'Criar'}</button>
+    </div>`);
+  setTimeout(()=>$('#famNome')&&$('#famNome').focus(),60);
+}
+function toggleFamGrupo(id){ _famGrupos.has(id)?_famGrupos.delete(id):_famGrupos.add(id);
+  const w=$('#famGruposWrap'); if(w) w.innerHTML=appData.grupos.map(g=>gchipToggle(g,_famGrupos.has(g.id),`toggleFamGrupo(${g.id})`)).join('');}
+function guardarFamilia(id){
+  const nome=$('#famNome').value.trim(); if(!nome){toast('Dá um nome à família'); return;}
+  if(id){const f=appData.familias.find(x=>x.id===id); f.nome=nome; f.grupos=[..._famGrupos];}
+  else{appData.familias.push({id:newFamId(), nome, grupos:[..._famGrupos], membros:[]});}
+  closeSheet(); currentTab='pessoas'; currentEventId=null;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab==='pessoas'));
+  render(); scheduleSave('Família: '+nome);
+}
+function removerFamilia(id){
+  const f=appData.familias.find(x=>x.id===id); if(!f) return;
+  if(!confirm(`Apagar "${f.nome}" e os seus membros? As respostas em eventos também são removidas.`)) return;
+  const ids=(f.membros||[]).map(p=>p.id);
+  appData.familias=appData.familias.filter(x=>x.id!==id);
+  appData.eventos.forEach(e=>{ if(e.respostas) ids.forEach(pid=>delete e.respostas[pid]); });
+  render(); scheduleSave('Família removida');
+}
+
+/* ---- Membro ---- */
+let _mTipo='adulto';
+function abrirMembro(fid){
+  _mTipo='adulto';
+  openSheet(`<h2>Novo membro</h2>
+    <div class="field"><label>Nome</label><input id="mNome" placeholder="Ex.: António"></div>
+    <div class="field"><label>Tipo</label>
+      <div class="toggle2" id="mTipoTg">
+        <button type="button" class="on" onclick="selMTipo('adulto')">Adulto</button>
+        <button type="button" onclick="selMTipo('crianca')">Criança</button>
+      </div></div>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="closeSheet()">Fechar</button>
+      <button class="btn" onclick="guardarMembro(${fid})">Adicionar</button>
+    </div>
+    <p class="hint">Ao adicionar, o campo limpa para meteres o próximo.</p>`);
+  setTimeout(()=>$('#mNome')&&$('#mNome').focus(),60);
+}
+function selMTipo(t){_mTipo=t; const tg=$('#mTipoTg'); if(!tg) return; [...tg.children].forEach((b,i)=>b.classList.toggle('on',(t==='adulto')===(i===0)));}
+function guardarMembro(fid){
+  const nome=$('#mNome').value.trim(); if(!nome){toast('Indica o nome'); return;}
+  const f=appData.familias.find(x=>x.id===fid); if(!f) return;
+  f.membros=f.membros||[]; f.membros.push({id:newPesId(), nome, tipo:_mTipo});
+  scheduleSave('Membro: '+nome);
+  $('#mNome').value=''; $('#mNome').focus(); render(); toast(nome+' adicionado');
+}
+function removerMembro(fid,pid){
+  const f=appData.familias.find(x=>x.id===fid); if(!f) return;
+  const p=(f.membros||[]).find(x=>x.id===pid); if(!p) return;
+  if(!confirm(`Remover ${p.nome}?`)) return;
+  f.membros=f.membros.filter(x=>x.id!==pid);
+  appData.eventos.forEach(e=>{ if(e.respostas) delete e.respostas[pid]; });
+  render(); scheduleSave('Membro removido');
+}
+
+/* ---- Definições ---- */
+$('#btnSettings').onclick=()=>{
+  openSheet(`<h2>Definições</h2>
+    <div class="field"><label>Token GitHub (escrita no AppDataJSON)</label>
+      <input id="tkInput" type="password" placeholder="github_pat_…" value="${esc(TOKEN)}"></div>
+    <p class="hint">Token fine-grained com <b>Contents: write</b> no repo <b>AppDataJSON</b>. Pode ser o mesmo das outras apps. Fica só neste dispositivo (localStorage), nunca nos dados. Sem token = modo leitura.</p>
+    <div class="sheet-actions">
+      <button class="btn ghost" onclick="limparToken()">Remover</button>
+      <button class="btn" onclick="guardarToken()">Guardar</button>
+    </div>
+    <p class="hint" style="margin-top:16px">Dados: <b>${OWNER}/${DATA_REPO}/${PATH}</b></p>`);
+};
+function guardarToken(){
+  const v=$('#tkInput').value.trim();
+  TOKEN=v; v?localStorage.setItem(TOKEN_KEY,v):localStorage.removeItem(TOKEN_KEY);
+  closeSheet(); render(); toast(v?'Token guardado':'Token removido'); carregar(true);
+}
+function limparToken(){TOKEN=''; localStorage.removeItem(TOKEN_KEY); closeSheet(); render(); toast('Token removido');}
+
+/* ---------- arranque ---------- */
+ensureMeta(); render(); carregar(true);
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+</script>
+</body>
+</html>
