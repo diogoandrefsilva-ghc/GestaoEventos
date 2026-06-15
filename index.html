@@ -259,6 +259,21 @@
   .dbtn.n.active{border-color:var(--nao); background:var(--nao-soft); color:var(--text);}
   .dbtn.p.active{border-color:var(--pend); background:var(--pend-soft); color:var(--text);}
 
+  /* botões nunca mostram cursor de texto (bug iOS do cursor perdido) */
+  button{caret-color:transparent;}
+
+  /* não convidadas */
+  .qbtn.nc{color:var(--faint);}
+  .nc-sep{height:1px; background:var(--border); margin:22px 0 0;}
+  .nc-toggle{display:flex; align-items:center; gap:9px; width:100%; padding:13px 4px; color:var(--dim); font-size:12.5px; font-weight:600; letter-spacing:.02em; background:transparent;}
+  .nc-toggle .nc-count{background:var(--surface2); border:1px solid var(--border); border-radius:99px; padding:1px 9px; font-size:12px; font-variant-numeric:tabular-nums; color:var(--dim);}
+  .nc-chev{margin-left:auto; color:var(--faint); font-size:20px; line-height:1; transition:transform .15s;}
+  .nc-chev.open{transform:rotate(90deg);}
+  .nc-list{margin-top:4px;}
+  .nc-list .fam{opacity:.82;}
+  .nc-fam .fam-head{border-bottom:none;}
+  .nc-fam .add-m{flex:none;}
+
   /* admin */
   .badge{position:absolute; top:-5px; right:-5px; min-width:17px; height:17px; padding:0 4px; border-radius:9px; background:var(--nao); color:#fff; font-size:10px; font-weight:700; display:grid; place-items:center; line-height:1;}
   .adm-row{display:flex; align-items:center; gap:8px; padding:9px 11px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; margin-bottom:7px;}
@@ -406,7 +421,7 @@ const GRUPO_CORES=['#7aa2f7','#bb9af7','#4cc9d6','#e6b455','#e0935a','#c678dd','
 let appData={grupos:[], familias:[], eventos:[], _meta:{ng:1,nf:1,np:1,ne:1}};
 let currentTab='eventos', currentEventId=null, currentFamId=null, currentGroupId=null, donutChart=null;
 let _fichaGruposFiltro=new Set();
-let _fEstado=null, _fCat=null;
+let _fEstado=null, _fCat=null, _ncAberto=false;
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -462,8 +477,12 @@ function familiasDoEvento(ev){
   }
   return result;
 }
+function ncSet(ev){ return new Set(ev.naoConvidados||[]); }
+function isNaoConvidada(ev,fid){ return (ev.naoConvidados||[]).includes(fid); }
+function familiasConvidadas(ev){ const nc=ncSet(ev); return familiasDoEvento(ev).filter(f=>!nc.has(f.id)); }
+function familiasNaoConvidadas(ev){ const nc=ncSet(ev); return familiasDoEvento(ev).filter(f=>nc.has(f.id)); }
 function familiasParaDashboard(ev){
-  const base=familiasDoEvento(ev);
+  const base=familiasConvidadas(ev);
   if(_fichaGruposFiltro.size===0) return base;
   return base.filter(f=>(f.grupos||[]).some(id=>_fichaGruposFiltro.has(id)));
 }
@@ -513,7 +532,7 @@ function tallyFams(ev,fams){
   });
   return {vemA,vemC,naoA,naoC,pendA,pendC, vem:vemA+vemC, nao:naoA+naoC, pend:pendA+pendC};
 }
-function tally(ev){return tallyFams(ev,familiasDoEvento(ev));}
+function tally(ev){return tallyFams(ev,familiasConvidadas(ev));}
 function toggleFichaGrupo(id){
   if(_fichaGruposFiltro.has(id)) _fichaGruposFiltro.delete(id);
   else _fichaGruposFiltro.add(id);
@@ -545,7 +564,7 @@ async function carregar(silent){
     appData={
       grupos:(g||[]).map(x=>({id:x.id,nome:x.nome,cor:x.cor})),
       familias:(f||[]).map(x=>({id:x.id,nome:x.nome,grupos:x.grupos||[],membros:x.membros||[]})),
-      eventos:(e||[]).map(x=>({id:x.id,nome:x.nome,tipo:x.tipo,data:x.data||'',hora:x.hora||'',local:x.local||'',notas:x.notas||'',grupos:x.grupos||[],respostas:x.respostas||{}})),
+      eventos:(e||[]).map(x=>({id:x.id,nome:x.nome,tipo:x.tipo,data:x.data||'',hora:x.hora||'',local:x.local||'',notas:x.notas||'',grupos:x.grupos||[],respostas:x.respostas||{},naoConvidados:x.nao_convidados||[]})),
       minhaFamiliaId:(cfg.minha_familia_id!=null?cfg.minha_familia_id:null),
       _meta:cfg.meta||{ng:1,nf:1,np:1,ne:1}
     };
@@ -579,7 +598,7 @@ async function _sbSaveAll(d){
     await sbReq('DELETE','familias?id=gt.0');
     if(d.familias.length) await sbReq('POST','familias',d.familias.map(f=>({id:f.id,nome:f.nome,grupos:f.grupos||[],membros:f.membros||[]})),{Prefer:'return=minimal'});
     await sbReq('DELETE','eventos?id=gt.0');
-    if(d.eventos.length) await sbReq('POST','eventos',d.eventos.map(e=>({id:e.id,nome:e.nome,tipo:e.tipo||null,data:e.data||null,hora:e.hora||null,local:e.local||null,notas:e.notas||null,grupos:e.grupos||[],respostas:e.respostas||{}})),{Prefer:'return=minimal'});
+    if(d.eventos.length) await sbReq('POST','eventos',d.eventos.map(e=>({id:e.id,nome:e.nome,tipo:e.tipo||null,data:e.data||null,hora:e.hora||null,local:e.local||null,notas:e.notas||null,grupos:e.grupos||[],respostas:e.respostas||{},nao_convidados:e.naoConvidados||[]})),{Prefer:'return=minimal'});
     return true;
   }catch(e){ console.error(e); toast('Erro ao gravar: '+e.message); return false; }
 }
@@ -781,9 +800,24 @@ function renderFicha(){
           <button class="qbtn v" onclick="setFamilia(${f.id},'vem')" title="Todos vêm">✓</button>
           <button class="qbtn n" onclick="setFamilia(${f.id},'nao')" title="Todos não">✗</button>
           <button class="qbtn p" onclick="setFamilia(${f.id},'pend')" title="Limpar">–</button>
+          <button class="qbtn nc" onclick="setNaoConvidada(${f.id},true)" title="Não convidar">⊘</button>
         </div>
       </div>
       ${membros||'<div class="member"><div class="m-name" style="color:var(--faint)">Sem membros</div></div>'}
+    </div>`;
+  };
+  const famBlocoNaoConv=(f)=>{
+    const isMinha=f.id===appData.minhaFamiliaId;
+    const cor=corDaFamilia(f);
+    const ad=(f.membros||[]).filter(p=>p.tipo!=='crianca').length;
+    const ki=(f.membros||[]).filter(p=>p.tipo==='crianca').length;
+    const resumo=[ad?ad+'A':'', ki?ki+'C':''].filter(Boolean).join(' · ');
+    return `<div class="fam nc-fam">
+      <div class="fam-head">
+        <span class="fam-dot" style="background:${cor}; opacity:.5"></span>
+        <div class="fam-name" style="color:var(--dim)">${isMinha?'🏠 ':''}${esc(f.nome)}${resumo?` <span style="color:var(--faint); font-weight:400">· ${resumo}</span>`:''}</div>
+        <button class="add-m" style="padding:4px 11px" onclick="setNaoConvidada(${f.id},false)">+ Convidar</button>
+      </div>
     </div>`;
   };
   const {secs, orphans}=agruparFamilias(fams);
@@ -797,10 +831,23 @@ function renderFicha(){
     const blocos=orphans.map(famBloco).filter(Boolean).join('');
     if(blocos) famHtml+=`<div class="group-header ge-evt"><span class="gchip ro neutral">Sem grupo</span></div>${blocos}`;
   }
+  let ncFams=familiasNaoConvidadas(ev);
+  if(_fichaGruposFiltro.size>0) ncFams=ncFams.filter(f=>(f.grupos||[]).some(id=>_fichaGruposFiltro.has(id)));
   if(!famHtml){
     famHtml=(_fEstado||_fCat)
       ? `<div class="empty" style="padding:30px 20px"><p>Ninguém para o filtro “${filtLbl||''}”.</p></div>`
-      : `<div class="empty" style="padding:30px 20px"><p>Nenhuma família nos grupos convidados. Ajusta os grupos do evento ou associa famílias a esses grupos em Pessoas.</p></div>`;
+      : ncFams.length
+        ? `<div class="empty" style="padding:24px 20px"><p>Nenhuma família convidada — todas as deste(s) grupo(s) estão por convidar (ver abaixo).</p></div>`
+        : `<div class="empty" style="padding:30px 20px"><p>Nenhuma família nos grupos convidados. Ajusta os grupos do evento ou associa famílias a esses grupos em Pessoas.</p></div>`;
+  }
+  if(!(_fEstado||_fCat) && ncFams.length){
+    famHtml+=`
+      <div class="nc-sep"></div>
+      <button type="button" class="nc-toggle" onclick="toggleNaoConv()">
+        Não convidadas <span class="nc-count">${ncFams.length}</span>
+        <span class="nc-chev${_ncAberto?' open':''}">›</span>
+      </button>
+      ${_ncAberto?`<div class="nc-list">${ncFams.map(famBlocoNaoConv).join('')}</div>`:''}`;
   }
 
   $('#view').innerHTML=`
@@ -869,11 +916,24 @@ function setFamilia(fid,st){
   (f.membros||[]).forEach(p=>{ if(st===def) delete ev.respostas[p.id]; else ev.respostas[p.id]=st; });
   renderFicha(); scheduleSave('Família '+f.nome+' atualizada: '+ev.nome);
 }
+function setNaoConvidada(fid,flag){
+  const ev=appData.eventos.find(e=>e.id===currentEventId); if(!ev) return;
+  const f=appData.familias.find(x=>x.id===fid); if(!f) return;
+  ev.naoConvidados=ev.naoConvidados||[];
+  const has=ev.naoConvidados.includes(fid);
+  if(flag&&!has) ev.naoConvidados.push(fid);
+  else if(!flag&&has) ev.naoConvidados=ev.naoConvidados.filter(x=>x!==fid);
+  else return;
+  const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy);
+  scheduleSave((flag?'Não convidada: ':'Convidada: ')+f.nome+' — '+ev.nome);
+  toast(flag?`${f.nome} marcada como não convidada`:`${f.nome} convidada`);
+}
+function toggleNaoConv(){ _ncAberto=!_ncAberto; const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy); }
 
 /* =========================================================================
    NAVEGAÇÃO
    ========================================================================= */
-function abrirFicha(id){currentEventId=id; _fichaGruposFiltro=new Set(); _fEstado=null; _fCat=null; window.scrollTo(0,0); render();}
+function abrirFicha(id){currentEventId=id; _fichaGruposFiltro=new Set(); _fEstado=null; _fCat=null; _ncAberto=false; window.scrollTo(0,0); render();}
 function fecharFicha(){currentEventId=null; window.scrollTo(0,0); render();}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   currentTab=b.dataset.tab; currentEventId=null; currentFamId=null; currentGroupId=null;
@@ -955,7 +1015,7 @@ function guardarEvento(id){
   const nome=$('#evNome').value.trim(); if(!nome){toast('Dá um nome ao evento'); return;}
   const dados={nome, tipo:_evTipo, data:$('#evData').value, hora:$('#evHora').value, local:$('#evLocal').value.trim(), notas:$('#evNotas').value.trim(), grupos:[..._evGrupos]};
   if(id){Object.assign(appData.eventos.find(e=>e.id===id), dados);}
-  else{const ev={id:newEvId(), ...dados, respostas:{}}; appData.eventos.push(ev); currentEventId=ev.id;}
+  else{const ev={id:newEvId(), ...dados, respostas:{}, naoConvidados:[]}; appData.eventos.push(ev); currentEventId=ev.id;}
   closeSheet(); render(); scheduleSave('Evento: '+nome);
 }
 function removerEvento(id){
@@ -1008,8 +1068,8 @@ function abrirMembro(fid){
     <div class="field"><label>Nome</label><input id="mNome" placeholder="Ex.: António"></div>
     <div class="field"><label>Tipo</label>
       <div class="toggle2" id="mTipoTg">
-        <button type="button" class="on" onclick="selMTipo('adulto')">Adulto</button>
-        <button type="button" onclick="selMTipo('crianca')">Criança</button>
+        <button type="button" tabindex="-1" class="on" onclick="selMTipo('adulto')">Adulto</button>
+        <button type="button" tabindex="-1" onclick="selMTipo('crianca')">Criança</button>
       </div></div>
     <div class="sheet-actions">
       <button class="btn ghost" onclick="closeSheet()">Fechar</button>
@@ -1035,8 +1095,8 @@ function editarMembro(fid,pid){
     <div class="field"><label>Nome</label><input id="mNome" value="${esc(p.nome)}"></div>
     <div class="field"><label>Tipo</label>
       <div class="toggle2" id="mTipoTg">
-        <button type="button" class="${p.tipo==='adulto'?'on':''}" onclick="selMTipo('adulto')">Adulto</button>
-        <button type="button" class="${p.tipo==='crianca'?'on':''}" onclick="selMTipo('crianca')">Criança</button>
+        <button type="button" tabindex="-1" class="${p.tipo==='adulto'?'on':''}" onclick="selMTipo('adulto')">Adulto</button>
+        <button type="button" tabindex="-1" class="${p.tipo==='crianca'?'on':''}" onclick="selMTipo('crianca')">Criança</button>
       </div></div>
     <div class="sheet-actions">
       <button class="btn danger" onclick="closeSheet();removerMembro(${fid},${pid})">Eliminar</button>
