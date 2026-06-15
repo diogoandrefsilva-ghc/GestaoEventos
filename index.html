@@ -269,13 +269,19 @@
   .qbtn.nc{color:var(--faint);}
   .nc-sep{height:1px; background:var(--border); margin:22px 0 0;}
   .nc-toggle{display:flex; align-items:center; gap:9px; width:100%; padding:13px 4px; color:var(--dim); font-size:12.5px; font-weight:600; letter-spacing:.02em; background:transparent;}
-  .nc-toggle .nc-count{background:var(--surface2); border:1px solid var(--border); border-radius:99px; padding:1px 9px; font-size:12px; font-variant-numeric:tabular-nums; color:var(--dim);}
+  .nc-count{background:var(--surface2); border:1px solid var(--border); border-radius:99px; padding:1px 9px; font-size:12px; font-variant-numeric:tabular-nums; color:var(--dim);}
   .nc-chev{margin-left:auto; color:var(--faint); font-size:20px; line-height:1; transition:transform .15s;}
   .nc-chev.open{transform:rotate(90deg);}
-  .nc-list{margin-top:4px;}
-  .nc-list .fam{opacity:.82;}
-  .nc-fam .fam-head{border-bottom:none;}
+  .nc-list{margin-top:4px; display:flex; flex-direction:column; gap:8px;}
+  .nc-list .fam{opacity:.92;}
+  .nc-fam .fam-head{border-bottom:none; cursor:pointer;}
+  .nc-fam.open .fam-head{border-bottom:1px solid var(--border);}
+  .nc-fam .fam-name .nc-count{margin-left:6px; vertical-align:middle;}
   .nc-fam .add-m{flex:none;}
+  .ncf-body{display:flex; flex-direction:column;}
+  .ncf-membro{display:flex; align-items:center; gap:10px; padding:8px 12px 8px 24px; border-top:1px solid var(--border);}
+  .ncf-membro:first-child{border-top:none;}
+  .ncf-membro .m-name{flex:1; min-width:0; color:var(--dim); font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 
   /* admin */
   .badge{position:absolute; top:-5px; right:-5px; min-width:17px; height:17px; padding:0 4px; border-radius:9px; background:var(--nao); color:#fff; font-size:10px; font-weight:700; display:grid; place-items:center; line-height:1;}
@@ -424,7 +430,7 @@ const GRUPO_CORES=['#7aa2f7','#bb9af7','#4cc9d6','#e6b455','#e0935a','#c678dd','
 let appData={grupos:[], familias:[], eventos:[], _meta:{ng:1,nf:1,np:1,ne:1}};
 let currentTab='eventos', currentEventId=null, currentFamId=null, currentGroupId=null, donutChart=null;
 let _fichaGruposFiltro=new Set();
-let _fEstado=null, _fCat=null, _ncAberto=false;
+let _fEstado=null, _fCat=null, _ncAberto=false, _ncFamAberta=new Set();
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -484,6 +490,8 @@ function estadoMembro(ev,f,p){ const def=(f.id===appData.minhaFamiliaId)?'vem':'
 function familiaNaoConvidada(ev,f){ const m=f.membros||[]; return m.length>0 && m.every(p=>estadoMembro(ev,f,p)==='nc'); }
 function familiasConvidadas(ev){ return familiasDoEvento(ev).filter(f=>!familiaNaoConvidada(ev,f)); }
 function familiasNaoConvidadas(ev){ return familiasDoEvento(ev).filter(f=>familiaNaoConvidada(ev,f)); }
+function membrosNc(ev,f){ return (f.membros||[]).filter(p=>estadoMembro(ev,f,p)==='nc'); }
+function familiasComNc(ev){ return familiasDoEvento(ev).filter(f=>membrosNc(ev,f).length>0); }
 /* migração: antigo ev.naoConvidados (família inteira) -> estado 'nc' por membro */
 function normalizeNC(){
   (appData.eventos||[]).forEach(ev=>{
@@ -827,15 +835,22 @@ function renderFicha(){
   const famBlocoNaoConv=(f)=>{
     const isMinha=f.id===appData.minhaFamiliaId;
     const cor=corDaFamilia(f);
-    const ad=(f.membros||[]).filter(p=>p.tipo!=='crianca').length;
-    const ki=(f.membros||[]).filter(p=>p.tipo==='crianca').length;
-    const resumo=[ad?ad+'A':'', ki?ki+'C':''].filter(Boolean).join(' · ');
-    return `<div class="fam nc-fam">
-      <div class="fam-head">
+    const ncm=membrosNc(ev,f);
+    const todosNc=ncm.length===(f.membros||[]).length;
+    const aberta=_ncFamAberta.has(f.id);
+    const corpo=aberta?`<div class="ncf-body">${ncm.map(p=>`
+      <div class="ncf-membro">
+        <span class="m-name">${esc(p.nome)}${p.tipo==='crianca'?'<span class="kid">criança</span>':''}</span>
+        <button class="add-m" style="padding:3px 10px" onclick="convidarMembro(${p.id})">+ Convidar</button>
+      </div>`).join('')}</div>`:'';
+    return `<div class="fam nc-fam${aberta?' open':''}">
+      <div class="fam-head ncf-head" onclick="toggleNcFam(${f.id})">
         <span class="fam-dot" style="background:${cor}; opacity:.5"></span>
-        <div class="fam-name" style="color:var(--dim)">${isMinha?'🏠 ':''}${esc(f.nome)}${resumo?` <span style="color:var(--faint); font-weight:400">· ${resumo}</span>`:''}</div>
-        <button class="add-m" style="padding:4px 11px" onclick="convidarFamilia(${f.id})">+ Convidar</button>
+        <div class="fam-name" style="color:var(--dim)">${isMinha?'🏠 ':''}${esc(f.nome)} <span class="nc-count">${ncm.length}</span></div>
+        ${todosNc?`<button class="add-m" style="padding:4px 11px" onclick="event.stopPropagation();convidarFamilia(${f.id})">+ Convidar</button>`:''}
+        <span class="nc-chev${aberta?' open':''}">›</span>
       </div>
+      ${corpo}
     </div>`;
   };
   const {secs, orphans}=agruparFamilias(fams);
@@ -849,7 +864,7 @@ function renderFicha(){
     const blocos=orphans.map(famBloco).filter(Boolean).join('');
     if(blocos) famHtml+=`<div class="group-header ge-evt"><span class="gchip ro neutral">Sem grupo</span></div>${blocos}`;
   }
-  let ncFams=familiasNaoConvidadas(ev);
+  let ncFams=familiasComNc(ev);
   if(_fichaGruposFiltro.size>0) ncFams=ncFams.filter(f=>(f.grupos||[]).some(id=>_fichaGruposFiltro.has(id)));
   if(!famHtml){
     famHtml=(_fEstado||_fCat)
@@ -943,12 +958,20 @@ function convidarFamilia(fid){
   scheduleSave('Convidada: '+f.nome+' — '+ev.nome);
   toast(`${f.nome} convidada`);
 }
+function convidarMembro(pid){
+  const ev=appData.eventos.find(e=>e.id===currentEventId); if(!ev) return;
+  ev.respostas=ev.respostas||{};
+  delete ev.respostas[pid];
+  const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy);
+  scheduleSave('Convidado: '+ev.nome);
+}
+function toggleNcFam(fid){ _ncFamAberta.has(fid)?_ncFamAberta.delete(fid):_ncFamAberta.add(fid); const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy); }
 function toggleNaoConv(){ _ncAberto=!_ncAberto; const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy); }
 
 /* =========================================================================
    NAVEGAÇÃO
    ========================================================================= */
-function abrirFicha(id){currentEventId=id; _fichaGruposFiltro=new Set(); _fEstado=null; _fCat=null; _ncAberto=false; window.scrollTo(0,0); render();}
+function abrirFicha(id){currentEventId=id; _fichaGruposFiltro=new Set(); _fEstado=null; _fCat=null; _ncAberto=false; _ncFamAberta=new Set(); window.scrollTo(0,0); render();}
 function fecharFicha(){currentEventId=null; window.scrollTo(0,0); render();}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   currentTab=b.dataset.tab; currentEventId=null; currentFamId=null; currentGroupId=null;
