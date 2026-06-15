@@ -611,21 +611,38 @@ function pushToGitHub(msg){
   if(!_sbSession){toast('Sessão expirada — volta a entrar'); return Promise.resolve(false);}
   const snap=JSON.parse(JSON.stringify(appData));
   _writePending++;
-  _writeChain=_writeChain.then(()=>_sbSaveAll(snap)).catch(e=>{console.error(e);return false;})
+  _writeChain=_writeChain.then(()=>_sbSaveAll(snap))
+    .then(ok=>{
+      if(ok===false){ ge_dirty=true; clearTimeout(_saveTimer); _saveTimer=setTimeout(()=>{ ge_dirty=false; pushToGitHub(msg); }, 4000); }
+      return ok;
+    })
+    .catch(e=>{ console.error(e); ge_dirty=true; return false; })
     .finally(()=>{_writePending=Math.max(0,_writePending-1);});
   return _writeChain;
+}
+async function sbReplace(table, rows){
+  if(rows.length){
+    await sbReq('POST',`${table}?on_conflict=id`, rows, {Prefer:'resolution=merge-duplicates,return=minimal'});
+    await sbReq('DELETE',`${table}?id=not.in.(${rows.map(r=>r.id).join(',')})`);
+  }else{
+    await sbReq('DELETE',`${table}?id=gt.0`);
+  }
 }
 async function _sbSaveAll(d){
   try{
     await sbReq('POST','config?on_conflict=id',[{id:1,minha_familia_id:(d.minhaFamiliaId!=null?d.minhaFamiliaId:null),meta:d._meta}],{Prefer:'resolution=merge-duplicates,return=minimal'});
-    await sbReq('DELETE','grupos?id=gt.0');
-    if(d.grupos.length) await sbReq('POST','grupos',d.grupos.map(g=>({id:g.id,nome:g.nome,cor:g.cor||null})),{Prefer:'return=minimal'});
-    await sbReq('DELETE','familias?id=gt.0');
-    if(d.familias.length) await sbReq('POST','familias',d.familias.map(f=>({id:f.id,nome:f.nome,grupos:f.grupos||[],membros:f.membros||[]})),{Prefer:'return=minimal'});
-    await sbReq('DELETE','eventos?id=gt.0');
-    if(d.eventos.length) await sbReq('POST','eventos',d.eventos.map(e=>({id:e.id,nome:e.nome,tipo:e.tipo||null,data:e.data||null,hora:e.hora||null,local:e.local||null,notas:e.notas||null,grupos:e.grupos||[],respostas:e.respostas||{},nao_convidados:e.naoConvidados||[]})),{Prefer:'return=minimal'});
+    await sbReplace('grupos', d.grupos.map(g=>({id:g.id,nome:g.nome,cor:g.cor||null})));
+    await sbReplace('familias', d.familias.map(f=>({id:f.id,nome:f.nome,grupos:f.grupos||[],membros:f.membros||[]})));
+    await sbReplace('eventos', d.eventos.map(e=>({id:e.id,nome:e.nome,tipo:e.tipo||null,data:e.data||null,hora:e.hora||null,local:e.local||null,notas:e.notas||null,grupos:e.grupos||[],respostas:e.respostas||{},nao_convidados:e.naoConvidados||[]})));
     return true;
   }catch(e){ console.error(e); toast('Erro ao gravar: '+e.message); return false; }
+}
+/* Sync manual: grava primeiro o que está pendente; só lê da BD se não houver nada por gravar */
+async function syncNow(){
+  if(ge_dirty){ clearTimeout(_saveTimer); ge_dirty=false; pushToGitHub('Sincronização'); }
+  let ok=true; try{ ok=await _writeChain; }catch(_){ ok=false; }
+  if(ok===false || ge_dirty || _writePending>0){ ge_dirty=true; toast('Alterações por gravar — não sincronizei para não as perder'); return; }
+  await carregar(false);
 }
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible' && _sbSession && _writePending===0 && !ge_dirty) carregar(true);
@@ -979,7 +996,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   render();
 });
 $('#fab').onclick=()=>{ currentTab==='eventos'?abrirEvento():abrirFamilia(); };
-$('#btnReload').onclick=()=>carregar(false);
+$('#btnReload').onclick=syncNow;
 $('#btnAdmin').onclick=()=>abrirAdmin();
 
 /* =========================================================================
