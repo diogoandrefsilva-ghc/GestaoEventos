@@ -137,6 +137,8 @@
   .member.is-vem{background:color-mix(in srgb,var(--vem) 9%,transparent);}
   .member.is-vem .m-name{color:var(--vem); font-weight:600;}
   .member.is-nao .m-name{color:var(--nao);}
+  .member.is-nc{opacity:.5;}
+  .member.is-nc .m-name{color:var(--faint); text-decoration:line-through; text-decoration-color:var(--border);}
   .m-name{flex:1; min-width:0; font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .m-name .kid{font-size:11px; color:var(--faint); margin-left:6px; vertical-align:1px;}
   .seg{display:flex; background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:2px; flex:none;}
@@ -144,6 +146,7 @@
   .seg button.on.v{background:var(--vem-soft); color:var(--vem);}
   .seg button.on.n{background:var(--nao-soft); color:var(--nao);}
   .seg button.on.p{background:var(--pend-soft); color:var(--dim);}
+  .seg button.on.nc{background:var(--surface2); color:var(--faint);}
 
   .fam-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:14px 15px; margin-bottom:11px;}
   .fam-card-head{display:flex; align-items:center; gap:10px; margin-bottom:2px;}
@@ -477,10 +480,23 @@ function familiasDoEvento(ev){
   }
   return result;
 }
-function ncSet(ev){ return new Set(ev.naoConvidados||[]); }
-function isNaoConvidada(ev,fid){ return (ev.naoConvidados||[]).includes(fid); }
-function familiasConvidadas(ev){ const nc=ncSet(ev); return familiasDoEvento(ev).filter(f=>!nc.has(f.id)); }
-function familiasNaoConvidadas(ev){ const nc=ncSet(ev); return familiasDoEvento(ev).filter(f=>nc.has(f.id)); }
+function estadoMembro(ev,f,p){ const def=(f.id===appData.minhaFamiliaId)?'vem':'pend'; return (ev.respostas||{})[p.id]||def; }
+function familiaNaoConvidada(ev,f){ const m=f.membros||[]; return m.length>0 && m.every(p=>estadoMembro(ev,f,p)==='nc'); }
+function familiasConvidadas(ev){ return familiasDoEvento(ev).filter(f=>!familiaNaoConvidada(ev,f)); }
+function familiasNaoConvidadas(ev){ return familiasDoEvento(ev).filter(f=>familiaNaoConvidada(ev,f)); }
+/* migração: antigo ev.naoConvidados (família inteira) -> estado 'nc' por membro */
+function normalizeNC(){
+  (appData.eventos||[]).forEach(ev=>{
+    if(ev.naoConvidados&&ev.naoConvidados.length){
+      ev.respostas=ev.respostas||{};
+      ev.naoConvidados.forEach(fid=>{
+        const f=appData.familias.find(x=>x.id===fid);
+        (f&&f.membros||[]).forEach(p=>{ ev.respostas[p.id]='nc'; });
+      });
+      ev.naoConvidados=[];
+    }
+  });
+}
 function familiasParaDashboard(ev){
   const base=familiasConvidadas(ev);
   if(_fichaGruposFiltro.size===0) return base;
@@ -525,6 +541,7 @@ function tallyFams(ev,fams){
     const def=f.id===appData.minhaFamiliaId?'vem':'pend';
     sortedMembros(f.membros).forEach(p=>{
       const st=r[p.id]||def; const kid=p.tipo==='crianca';
+      if(st==='nc') return;
       if(st==='vem'){kid?vemC++:vemA++;}
       else if(st==='nao'){kid?naoC++:naoA++;}
       else{kid?pendC++:pendA++;}
@@ -568,7 +585,7 @@ async function carregar(silent){
       minhaFamiliaId:(cfg.minha_familia_id!=null?cfg.minha_familia_id:null),
       _meta:cfg.meta||{ng:1,nf:1,np:1,ne:1}
     };
-    ensureMeta(); render();
+    ensureMeta(); normalizeNC(); render();
     if(!silent) toast('Sincronizado');
   }catch(err){
     console.error(err);
@@ -781,13 +798,14 @@ function renderFicha(){
     if((_fEstado||_fCat) && !mem.length) return '';
     const membros=mem.map(p=>{
       const st=r[p.id]||def;
-      const cls=st==='vem'?' is-vem':st==='nao'?' is-nao':'';
+      const cls=st==='vem'?' is-vem':st==='nao'?' is-nao':st==='nc'?' is-nc':'';
       return `<div class="member${cls}">
         <div class="m-name">${esc(p.nome)}${p.tipo==='crianca'?'<span class="kid">criança</span>':''}</div>
         <div class="seg">
           <button class="${st==='vem'?'on v':''}" onclick="setPresenca(${p.id},'vem')">✓</button>
           <button class="${st==='nao'?'on n':''}" onclick="setPresenca(${p.id},'nao')">✗</button>
           <button class="${st==='pend'?'on p':''}" onclick="setPresenca(${p.id},'pend')">–</button>
+          <button class="${st==='nc'?'on nc':''}" onclick="setPresenca(${p.id},'nc')" title="Não convidado">⊘</button>
         </div>
       </div>`;
     }).join('');
@@ -800,7 +818,7 @@ function renderFicha(){
           <button class="qbtn v" onclick="setFamilia(${f.id},'vem')" title="Todos vêm">✓</button>
           <button class="qbtn n" onclick="setFamilia(${f.id},'nao')" title="Todos não">✗</button>
           <button class="qbtn p" onclick="setFamilia(${f.id},'pend')" title="Limpar">–</button>
-          <button class="qbtn nc" onclick="setNaoConvidada(${f.id},true)" title="Não convidar">⊘</button>
+          <button class="qbtn nc" onclick="setFamilia(${f.id},'nc')" title="Não convidar família">⊘</button>
         </div>
       </div>
       ${membros||'<div class="member"><div class="m-name" style="color:var(--faint)">Sem membros</div></div>'}
@@ -816,7 +834,7 @@ function renderFicha(){
       <div class="fam-head">
         <span class="fam-dot" style="background:${cor}; opacity:.5"></span>
         <div class="fam-name" style="color:var(--dim)">${isMinha?'🏠 ':''}${esc(f.nome)}${resumo?` <span style="color:var(--faint); font-weight:400">· ${resumo}</span>`:''}</div>
-        <button class="add-m" style="padding:4px 11px" onclick="setNaoConvidada(${f.id},false)">+ Convidar</button>
+        <button class="add-m" style="padding:4px 11px" onclick="convidarFamilia(${f.id})">+ Convidar</button>
       </div>
     </div>`;
   };
@@ -916,17 +934,14 @@ function setFamilia(fid,st){
   (f.membros||[]).forEach(p=>{ if(st===def) delete ev.respostas[p.id]; else ev.respostas[p.id]=st; });
   renderFicha(); scheduleSave('Família '+f.nome+' atualizada: '+ev.nome);
 }
-function setNaoConvidada(fid,flag){
+function convidarFamilia(fid){
   const ev=appData.eventos.find(e=>e.id===currentEventId); if(!ev) return;
   const f=appData.familias.find(x=>x.id===fid); if(!f) return;
-  ev.naoConvidados=ev.naoConvidados||[];
-  const has=ev.naoConvidados.includes(fid);
-  if(flag&&!has) ev.naoConvidados.push(fid);
-  else if(!flag&&has) ev.naoConvidados=ev.naoConvidados.filter(x=>x!==fid);
-  else return;
+  ev.respostas=ev.respostas||{};
+  (f.membros||[]).forEach(p=>{ if(ev.respostas[p.id]==='nc') delete ev.respostas[p.id]; });
   const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy);
-  scheduleSave((flag?'Não convidada: ':'Convidada: ')+f.nome+' — '+ev.nome);
-  toast(flag?`${f.nome} marcada como não convidada`:`${f.nome} convidada`);
+  scheduleSave('Convidada: '+f.nome+' — '+ev.nome);
+  toast(`${f.nome} convidada`);
 }
 function toggleNaoConv(){ _ncAberto=!_ncAberto; const sy=window.scrollY; renderFicha(); window.scrollTo(0,sy); }
 
