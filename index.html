@@ -469,11 +469,21 @@ function familiasParaDashboard(ev){
 }
 /* Ordem dos grupos: prioridade fixa primeiro, depois alfabético */
 const ORDEM_GRUPOS=['Família Direta','Família Lisboa','Família Braga'];
-function gruposOrdenados(){
+function ordenarGrupos(arr){
   const idx=g=>{const i=ORDEM_GRUPOS.indexOf(g.nome); return i<0?999:i;};
-  return [...appData.grupos].sort((a,b)=>{
+  return [...arr].sort((a,b)=>{
     const da=idx(a), db=idx(b);
     if(da!==db) return da-db;
+    return a.nome.localeCompare(b.nome,'pt');
+  });
+}
+function gruposOrdenados(){ return ordenarGrupos(appData.grupos); }
+/* Ordena famílias: a minha família primeiro, depois alfabético */
+function ordenarFamilias(arr){
+  const mfid=appData.minhaFamiliaId;
+  return [...arr].sort((a,b)=>{
+    if(a.id===mfid) return -1;
+    if(b.id===mfid) return 1;
     return a.nome.localeCompare(b.nome,'pt');
   });
 }
@@ -481,13 +491,12 @@ function gruposOrdenados(){
 function agruparFamilias(fams){
   const shown=new Set(); const secs=[];
   for(const g of gruposOrdenados()){
-    const fs=fams.filter(f=>!shown.has(f.id)&&(f.grupos||[]).includes(g.id))
-      .sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+    const fs=ordenarFamilias(fams.filter(f=>!shown.has(f.id)&&(f.grupos||[]).includes(g.id)));
     if(!fs.length) continue;
     fs.forEach(f=>shown.add(f.id));
     secs.push({grupo:g, fams:fs});
   }
-  const orphans=fams.filter(f=>!shown.has(f.id)).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+  const orphans=ordenarFamilias(fams.filter(f=>!shown.has(f.id)));
   return {secs, orphans};
 }
 function tallyFams(ev,fams){
@@ -604,7 +613,7 @@ function renderEventos(){
   $('#view').innerHTML=evs.map(ev=>{
     const t=tally(ev); const tp=TIPOS[ev.tipo]||TIPOS.outro;
     const meta=[fmtData(ev.data), ev.hora||'', ev.local||''].filter(Boolean).join(' · ');
-    const gconv=(ev.grupos||[]).map(grupoById).filter(Boolean);
+    const gconv=ordenarGrupos((ev.grupos||[]).map(grupoById).filter(Boolean));
     const gline=gconv.length?`<div class="gwrap" style="margin-top:10px">${gconv.map(g=>gchipRO(g)).join('')}</div>`:'';
     return `<div class="card tap" onclick="abrirFicha(${ev.id})">
       <div class="ev-top">
@@ -725,7 +734,7 @@ function renderFicha(){
   if(!ev){currentEventId=null; return render();}
   const tp=TIPOS[ev.tipo]||TIPOS.outro;
   const meta=[fmtData(ev.data), ev.hora||'', ev.local||''].filter(Boolean).join(' · ');
-  const gconv=(ev.grupos||[]).map(grupoById).filter(Boolean);
+  const gconv=ordenarGrupos((ev.grupos||[]).map(grupoById).filter(Boolean));
   const filt=_fichaGruposFiltro;
   const gline = gconv.length
     ? `<div class="gwrap" style="margin:2px 0 4px">${gconv.map(g=>{
