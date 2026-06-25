@@ -308,6 +308,13 @@
   .auth-btn:active{transform:scale(.98);}
   .auth-status{font-size:13px; color:var(--dim); min-height:18px;}
 
+  .splash{position:fixed; inset:0; z-index:120; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; transition:opacity .35s ease;}
+  .splash.hide{opacity:0; pointer-events:none;}
+  .splash-brand{font-family:Fraunces,serif; font-size:32px; font-weight:600; letter-spacing:-0.01em;}
+  .splash-brand .dot{color:var(--gold);}
+  .splash .spinner{width:30px; height:30px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--gold); animation:ge-spin .7s linear infinite;}
+  @keyframes ge-spin{to{transform:rotate(360deg);}}
+
   /* eventos: linhas condensadas + cabeçalho por grupo */
   .group-header.ge-evt{padding:15px 2px 6px;}
   .group-header.ge-evt:first-of-type{padding-top:4px;}
@@ -322,6 +329,11 @@
 </style>
 </head>
 <body>
+
+<div class="splash" id="splash">
+  <div class="splash-brand">Gestão<span class="dot">·</span>Eventos</div>
+  <div class="spinner"></div>
+</div>
 
 <div class="auth-page" id="page-login">
   <h2>Gestão<span class="auth-brand-dot">·</span>Eventos</h2>
@@ -1270,7 +1282,8 @@ async function sbInit(){
   }
   sbMostrarLogin();
 }
-function sbMostrarLogin(){ $('#page-login').classList.add('show'); $('#page-sem-acesso').classList.remove('show'); }
+function sbEsconderSplash(){ const s=$('#splash'); if(!s||s.classList.contains('hide')) return; s.classList.add('hide'); setTimeout(()=>{ try{s.remove();}catch(_){} },400); }
+function sbMostrarLogin(){ $('#page-login').classList.add('show'); $('#page-sem-acesso').classList.remove('show'); sbEsconderSplash(); }
 async function sbAposLogin(){
   $('#page-login').classList.remove('show');
   const email=_sbSession.user.email;
@@ -1279,11 +1292,13 @@ async function sbAposLogin(){
   if(!Array.isArray(data)||!data.length){
     $('#page-sem-acesso').classList.add('show');
     $('#sem-acesso-email').textContent=`Sessão iniciada como ${email}. Esta conta ainda não tem acesso.`;
+    sbEsconderSplash();
     return;
   }
   $('#page-sem-acesso').classList.remove('show');
   $('#btnAdmin').style.display=isAdmin()?'grid':'none';
   await carregar(true);
+  sbEsconderSplash();
   if(isAdmin()) refreshAdminBadge();
 }
 function sbLoginGoogle(){ window.location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.href.split('#')[0])}`; }
