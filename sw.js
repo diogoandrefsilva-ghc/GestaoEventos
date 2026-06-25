@@ -1,5 +1,5 @@
 /* GestaoEventos service worker — network-first p/ HTML (no-store), cache-first p/ restantes */
-const CACHE_NAME = 'ge-v2';
+const CACHE_NAME = 'ge-v3';
 
 self.addEventListener('install', () => self.skipWaiting());
 
